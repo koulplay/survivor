@@ -18,7 +18,13 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(raylib)
 
 # --- игра ---
-add_executable(survivor main.cpp)
+add_executable(survivor main.cpp
+        world.h
+        world.cpp
+        update.h
+        update.cpp
+        draw.h
+        draw.cpp)
 target_link_libraries(survivor PRIVATE raylib)
 
 if (MSVC)
