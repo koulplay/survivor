@@ -11,14 +11,14 @@
 #include "world.h"
 
 namespace {
-[[nodiscard]] Vector2 RandomEdgePoint() {
-    const auto x = static_cast<float>(GetRandomValue(0, kScreenWidth));
-    const auto y = static_cast<float>(GetRandomValue(0, kScreenHeight));
+[[nodiscard]] Vector2 RandomEdgePoint(const Player &player) {
+    const auto x = static_cast<float>(GetRandomValue(static_cast<int>(player.pos.x) - kScreenWidth / 2, static_cast<int>(player.pos.x) + kScreenWidth / 2));
+    const auto y = static_cast<float>(GetRandomValue(static_cast<int>(player.pos.y) - kScreenHeight / 2, static_cast<int>(player.pos.y) + kScreenHeight / 2));
     switch (GetRandomValue(0, 3)) {
-        case 0: return {x, 0.0f};
-        case 1: return {x, kScreenHeight};
-        case 2: return {0.0f, y};
-        default: return {kScreenWidth, y};
+        case 0: return {x, player.pos.y - kScreenHeight / 2};
+        case 1: return {x, player.pos.y + kScreenHeight / 2};
+        case 2: return {player.pos.x - kScreenWidth / 2, y};
+        default: return {player.pos.x + kScreenWidth / 2, y};
     }
 }
 
@@ -62,7 +62,7 @@ void UpdateSpawn(World &world, const float dt) {
     world.enemy_spawn_time += dt;
     if (world.enemy_spawn_time > 1.0f) {
         world.enemy_spawn_time -= 1.0f;
-        world.enemies.emplace_back(RandomEdgePoint());
+        world.enemies.emplace_back(RandomEdgePoint(world.player));
     }
 }
 
@@ -95,10 +95,17 @@ void UpdateShooting(World &world, const float dt) {
     world.bullets.push_back({p.pos, Vector2Normalize(*target - p.pos) * p.bullet_speed});
 }
 
+[[nodiscard]] bool CheckBulletInScreen(const Player &player,const Bullet &b) {
+    return b.pos.x > player.pos.x + kScreenWidth / 2
+        || b.pos.x < player.pos.x - kScreenWidth / 2
+        || b.pos.y > player.pos.y + kScreenHeight / 2
+        || b.pos.y < player.pos.y - kScreenHeight / 2;
+}
+
 // полёт, попадания, удаление
 void UpdateBullets(World &world, const float dt) {
     for (auto &b: world.bullets) {
-        if (b.pos.x > kScreenWidth || b.pos.x < 0 || b.pos.y > kScreenHeight || b.pos.y < 0) {
+        if (CheckBulletInScreen(world.player, b)) {
             b.dead = true;
             continue;
         }

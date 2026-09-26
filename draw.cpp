@@ -28,19 +28,26 @@ void Draw(const World &world) {
     BeginDrawing();
     ClearBackground(BLACK);
 
-    DrawRectangleRec(world.player.rect(), RAYWHITE);
+    const Camera2D camera{
+        .offset = {kScreenWidth / 2.f, kScreenHeight / 2.f},
+        .target = world.player.pos,
+        .rotation = 0.f,
+        .zoom = 1.f,
+    };
 
+    BeginMode2D(camera);
+    DrawRectangleRec(world.player.rect(), RAYWHITE);
     for (const auto &e: world.enemies) {
         DrawCircleV(e.pos, kEnemyRadius, RED);
     }
-
     for (const auto &b: world.bullets) {
         DrawCircleV(b.pos, world.player.bullet_radius, YELLOW);
     }
-
     for (const auto &exp: world.exps) {
         DrawCircleV(exp.pos, kExpRadius, SKYBLUE);
     }
+    EndMode2D();
+
 
     DrawRectangleLines(kExpBarPos.x, kExpBarPos.y, kExpBarWidth, kExpBarHeight, GOLD);
     DrawRectangle(kExpBarPos.x, kExpBarPos.y,
