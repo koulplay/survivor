@@ -95,23 +95,21 @@ void UpdateShooting(World &world, const float dt) {
     world.bullets.push_back({p.pos, Vector2Normalize(*target - p.pos) * p.bullet_speed});
 }
 
-[[nodiscard]] bool CheckBulletInScreen(const Player &player,const Bullet &b) {
-    return b.pos.x > player.pos.x + kScreenWidth / 2
-        || b.pos.x < player.pos.x - kScreenWidth / 2
-        || b.pos.y > player.pos.y + kScreenHeight / 2
-        || b.pos.y < player.pos.y - kScreenHeight / 2;
+[[nodiscard]] bool CheckBulletLifeTime(const Bullet &b) {
+    return b.lifetime >= kPlayerBulletLifetime;
 }
 
 // полёт, попадания, удаление
 void UpdateBullets(World &world, const float dt) {
     for (auto &b: world.bullets) {
-        if (CheckBulletInScreen(world.player, b)) {
+        if (CheckBulletLifeTime(b)) {
             b.dead = true;
             continue;
         }
         if (b.dead) {
             continue;
         }
+        b.lifetime += dt;
         for (auto &e: world.enemies) {
             if (e.dead) {
                 continue;

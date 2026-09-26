@@ -30,6 +30,8 @@ constexpr float kBuffMagnet = 5.f;
 constexpr float kBuffHealth = 5.f;
 constexpr float kBuffRestoreHealth = 25.f;
 
+constexpr float kPlayerBulletLifetime = 10.f;
+
 enum class GameState {
     PLAYING,
     LEVELUP,
@@ -43,8 +45,6 @@ struct LevelUpMenu {
     int selected = 0;
 };
 
-
-
 struct Exp {
     Vector2 pos;
     bool dead = false;
@@ -53,6 +53,7 @@ struct Exp {
 struct Bullet {
     Vector2 pos;
     Vector2 vel;
+    float lifetime;
     bool dead = false;
 };
 
