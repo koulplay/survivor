@@ -30,7 +30,7 @@ constexpr float kBuffMagnet = 5.f;
 constexpr float kBuffHealth = 5.f;
 constexpr float kBuffRestoreHealth = 25.f;
 
-constexpr float kPlayerBulletLifetime = 10.f;
+constexpr float kPlayerBulletMaxLifetime = 10.f;
 
 enum class GameState {
     PLAYING,
@@ -53,7 +53,7 @@ struct Exp {
 struct Bullet {
     Vector2 pos;
     Vector2 vel;
-    float lifetime;
+    float lifetime = 0.f;
     bool dead = false;
 };
 

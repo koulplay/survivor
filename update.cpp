@@ -95,14 +95,14 @@ void UpdateShooting(World &world, const float dt) {
     world.bullets.push_back({p.pos, Vector2Normalize(*target - p.pos) * p.bullet_speed});
 }
 
-[[nodiscard]] bool CheckBulletLifeTime(const Bullet &b) {
-    return b.lifetime >= kPlayerBulletLifetime;
+[[nodiscard]] bool ShouldDieByLifetime(const Bullet &b) {
+    return b.lifetime >= kPlayerBulletMaxLifetime;
 }
 
 // полёт, попадания, удаление
 void UpdateBullets(World &world, const float dt) {
     for (auto &b: world.bullets) {
-        if (CheckBulletLifeTime(b)) {
+        if (ShouldDieByLifetime(b)) {
             b.dead = true;
             continue;
         }
