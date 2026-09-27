@@ -33,7 +33,7 @@ void Draw(const World &world) {
         .offset = {kScreenWidth / 2.f, kScreenHeight / 2.f},
         .target = world.player.pos,
         .rotation = 0.f,
-        .zoom = 0.9f,
+        .zoom = 1.f,
     };
 
     BeginMode2D(camera);
