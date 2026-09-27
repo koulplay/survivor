@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 
 #include "draw.h"
 #include "world.h"
@@ -32,10 +33,23 @@ void Draw(const World &world) {
         .offset = {kScreenWidth / 2.f, kScreenHeight / 2.f},
         .target = world.player.pos,
         .rotation = 0.f,
-        .zoom = 1.f,
+        .zoom = 0.9f,
     };
 
     BeginMode2D(camera);
+
+    constexpr float cell_size = 50.f;
+    for (float i = std::floor((world.player.pos.x - kScreenWidth / 2) / cell_size) * cell_size;
+        i <= world.player.pos.x + kScreenWidth / 2;
+        i += cell_size) {
+        DrawLine(i, world.player.pos.y - kScreenHeight / 2, i, world.player.pos.y + kScreenHeight / 2, Fade(GOLD, 0.1f));
+    }
+    for (float i = std::floor((world.player.pos.y - kScreenHeight / 2) / cell_size) * cell_size;
+        i <= world.player.pos.y + kScreenHeight / 2;
+        i += cell_size) {
+        DrawLine(world.player.pos.x - kScreenWidth / 2, i, world.player.pos.x + kScreenWidth / 2, i, Fade(GOLD, 0.1f));
+    }
+
     DrawRectangleRec(world.player.rect(), RAYWHITE);
     for (const auto &e: world.enemies) {
         DrawCircleV(e.pos, kEnemyRadius, RED);
