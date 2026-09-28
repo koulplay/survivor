@@ -72,6 +72,7 @@ void UpdatePlayer(Player &player, const float dt) {
 
 void UpdateEnemies(World &world, const float dt) {
     for (auto &e: world.enemies) {
+        e.hit_flash_time = std::max(0.f, e.hit_flash_time - dt);
         e.pos = Vector2MoveTowards(e.pos, world.player.pos, kEnemySpeed * dt);
         if (CheckCollisionCircleRec(e.pos, kEnemyRadius, world.player.rect())) {
             world.player.health -= kEnemyDamage * dt;
@@ -96,7 +97,7 @@ void UpdateShooting(World &world, const float dt) {
 }
 
 [[nodiscard]] bool ShouldDieByLifetime(const Bullet &b) {
-    return b.lifetime >= kPlayerBulletMaxLifetime;
+    return b.age >= kPlayerBulletMaxLifetime;
 }
 
 // полёт, попадания, удаление
@@ -109,12 +110,18 @@ void UpdateBullets(World &world, const float dt) {
         if (b.dead) {
             continue;
         }
-        b.lifetime += dt;
+        b.age += dt;
         for (auto &e: world.enemies) {
             if (e.dead) {
                 continue;
             }
             if (CheckCollisionCircles(b.pos, world.player.bullet_radius, e.pos, kEnemyRadius)) {
+                e.hit_flash_time = kEnemyFlashTime;
+                world.damage_popups.push_back({
+                .pos = e.pos,
+                .vel = Vector2{0.f, -kDamagePopupSpeed},
+                .damage = world.player.bullet_damage
+                });
                 e.health -= world.player.bullet_damage;
                 if (e.health <= 0.f) {
                     e.dead = true;
@@ -137,6 +144,17 @@ void UpdateExp(World &world, const float dt) {
         if (CheckCollisionCircleRec(exp.pos, kExpRadius, world.player.rect())) {
             world.current_exp += kExpValue;
             exp.dead = true;
+        }
+    }
+}
+
+void UpdateDamagePopup(World &world, const float dt) {
+    for (auto &dp: world.damage_popups) {
+        dp.pos += dp.vel * dt;
+        //dp.vel *= dt;
+        dp.age += dt;
+        if (dp.age >= dp.lifetime) {
+            dp.dead = true;
         }
     }
 }
@@ -175,12 +193,14 @@ void Update(World &world, const float dt) {
     UpdateShooting(world, dt);
     UpdateBullets(world, dt);
     UpdateExp(world, dt);
+    UpdateDamagePopup(world, dt);
 
     UpdateGameState(world);
 
     std::erase_if(world.enemies, [](const Enemy &e) { return e.dead; });
     std::erase_if(world.bullets, [](const Bullet &b) { return b.dead; });
     std::erase_if(world.exps, [](const Exp &e) { return e.dead; });
+    std::erase_if(world.damage_popups, [](const DamagePopup &dp) { return dp.dead; });
 }
 
 void ApplyUpgrade(Player &p, Upgrade u) {

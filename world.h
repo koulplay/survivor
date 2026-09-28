@@ -32,6 +32,9 @@ constexpr float kBuffRestoreHealth = 25.f;
 
 constexpr float kPlayerBulletMaxLifetime = 10.f;
 
+constexpr float kDamagePopupSpeed = 10.f;
+constexpr float kEnemyFlashTime = 0.05f;
+
 enum class GameState {
     PLAYING,
     LEVELUP,
@@ -53,7 +56,7 @@ struct Exp {
 struct Bullet {
     Vector2 pos;
     Vector2 vel;
-    float lifetime = 0.f;
+    float age = 0.f;
     bool dead = false;
 };
 
@@ -79,6 +82,16 @@ struct Player {
 struct Enemy {
     Vector2 pos;
     float health = 10.f;
+    float hit_flash_time = 0.f;
+    bool dead = false;
+};
+
+struct DamagePopup {
+    Vector2 pos;
+    Vector2 vel;
+    float damage = 0.f;
+    float lifetime = 2.f;
+    float age = 0.f;
     bool dead = false;
 };
 
@@ -87,6 +100,7 @@ struct World {
     std::vector<Enemy> enemies;
     std::vector<Bullet> bullets;
     std::vector<Exp> exps;
+    std::vector<DamagePopup> damage_popups;
 
     LevelUpMenu lvl_menu;
     GameState game_state = GameState::PLAYING;

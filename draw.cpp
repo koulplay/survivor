@@ -42,7 +42,6 @@ void Draw(const World &world) {
     };
 
     BeginMode2D(camera);
-
     constexpr float cell_size = 50.f;
     for (float i = std::floor((world.player.pos.x - kScreenWidth / 2) / cell_size) * cell_size;
         i <= world.player.pos.x + kScreenWidth / 2;
@@ -57,7 +56,12 @@ void Draw(const World &world) {
 
     DrawRectangleRec(world.player.rect(), RAYWHITE);
     for (const auto &e: world.enemies) {
-        DrawCircleV(e.pos, kEnemyRadius, RED);
+        if (e.hit_flash_time > 0.f) {
+            DrawCircleV(e.pos, kEnemyRadius, ORANGE);
+        }
+        else {
+            DrawCircleV(e.pos, kEnemyRadius, RED);
+        }
     }
     for (const auto &b: world.bullets) {
         DrawCircleV(b.pos, world.player.bullet_radius, YELLOW);
@@ -65,12 +69,16 @@ void Draw(const World &world) {
     for (const auto &exp: world.exps) {
         DrawCircleV(exp.pos, kExpRadius, SKYBLUE);
     }
+
+    for (const auto &dp: world.damage_popups) {
+        DrawText(TextFormat("%.1f", dp.damage), dp.pos.x, dp.pos.y, 10, ORANGE);
+    }
+
     EndMode2D();
 
     DrawText(GameTimeToTextFormat(world.game_time),
          (kScreenWidth - MeasureText(GameTimeToTextFormat(world.game_time), 20)) / 2, 50, 20,
          GOLD);
-
 
     DrawRectangleLines(kExpBarPos.x, kExpBarPos.y, kExpBarWidth, kExpBarHeight, GOLD);
     DrawRectangle(kExpBarPos.x, kExpBarPos.y,
