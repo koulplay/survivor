@@ -165,6 +165,7 @@ void UpdateGameState(World &world) {
 
 
 void Update(World &world, const float dt) {
+    world.game_time += dt;
     UpdateSpawn(world, dt);
     UpdatePlayer(world.player, dt);
     UpdateEnemies(world, dt);

@@ -92,6 +92,7 @@ struct World {
     float exp_to_level = 1.f;
     int level = 0;
     float enemy_spawn_time = 0.f;
+    float game_time = 0.f;
 };
 
 [[nodiscard]] Rectangle CardRect(int i);

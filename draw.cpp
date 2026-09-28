@@ -23,6 +23,11 @@ namespace {
     }
     return "?";
 }
+
+[[nodiscard]] const char *GameTimeToTextFormat(const float time) {
+    float secs = static_cast<int>(time) % 60;
+    return TextFormat("%.0f : %.0f", time / 60, secs);
+}
 }
 
 void Draw(const World &world) {
@@ -61,6 +66,10 @@ void Draw(const World &world) {
         DrawCircleV(exp.pos, kExpRadius, SKYBLUE);
     }
     EndMode2D();
+
+    DrawText(GameTimeToTextFormat(world.game_time),
+         (kScreenWidth - MeasureText(GameTimeToTextFormat(world.game_time), 20)) / 2, 50, 20,
+         GOLD);
 
 
     DrawRectangleLines(kExpBarPos.x, kExpBarPos.y, kExpBarWidth, kExpBarHeight, GOLD);
