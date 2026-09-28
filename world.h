@@ -58,11 +58,12 @@ struct Bullet {
 };
 
 struct Player {
-    float size = 32.0f;
+    float size = 32.f;
     float speed = 150.f;
     float fire_rate = 2.f;
-    float bullet_radius = 3.0f;
+    float bullet_radius = 3.f;
     float bullet_speed = 300.f;
+    float bullet_damage = 5.f;
 
     Vector2 pos{kScreenWidth / 2.f, kScreenHeight / 2.f};
     float health = 100.f;
@@ -77,6 +78,7 @@ struct Player {
 
 struct Enemy {
     Vector2 pos;
+    float health = 10.f;
     bool dead = false;
 };
 

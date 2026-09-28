@@ -115,11 +115,14 @@ void UpdateBullets(World &world, const float dt) {
                 continue;
             }
             if (CheckCollisionCircles(b.pos, world.player.bullet_radius, e.pos, kEnemyRadius)) {
+                e.health -= world.player.bullet_damage;
+                if (e.health <= 0.f) {
+                    e.dead = true;
+                    b.dead = true;
+                    world.exps.push_back({e.pos});
+                    break;
+                }
                 b.dead = true;
-                e.dead = true;
-
-                world.exps.push_back({e.pos});
-                break;
             }
         }
         b.pos += b.vel * dt;
