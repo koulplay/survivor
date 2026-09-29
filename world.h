@@ -112,4 +112,3 @@ struct World {
 };
 
 [[nodiscard]] Rectangle CardRect(int i);
-

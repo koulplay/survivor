@@ -12,8 +12,10 @@
 
 namespace {
 [[nodiscard]] Vector2 RandomEdgePoint(const Player &player) {
-    const auto x = static_cast<float>(GetRandomValue(static_cast<int>(player.pos.x) - kScreenWidth / 2, static_cast<int>(player.pos.x) + kScreenWidth / 2));
-    const auto y = static_cast<float>(GetRandomValue(static_cast<int>(player.pos.y) - kScreenHeight / 2, static_cast<int>(player.pos.y) + kScreenHeight / 2));
+    const auto x = static_cast<float>(GetRandomValue(static_cast<int>(player.pos.x) - kScreenWidth / 2,
+                                                     static_cast<int>(player.pos.x) + kScreenWidth / 2));
+    const auto y = static_cast<float>(GetRandomValue(static_cast<int>(player.pos.y) - kScreenHeight / 2,
+                                                     static_cast<int>(player.pos.y) + kScreenHeight / 2));
     switch (GetRandomValue(0, 3)) {
         case 0: return {x, player.pos.y - kScreenHeight / 2};
         case 1: return {x, player.pos.y + kScreenHeight / 2};
@@ -115,12 +117,15 @@ void UpdateBullets(World &world, const float dt) {
             if (e.dead) {
                 continue;
             }
+            if (b.dead) {
+                break;
+            }
             if (CheckCollisionCircles(b.pos, world.player.bullet_radius, e.pos, kEnemyRadius)) {
                 e.hit_flash_time = kEnemyFlashTime;
                 world.damage_popups.push_back({
-                .pos = e.pos,
-                .vel = Vector2{0.f, -kDamagePopupSpeed},
-                .damage = world.player.bullet_damage
+                    .pos = e.pos,
+                    .vel = Vector2{0.f, -kDamagePopupSpeed},
+                    .damage = world.player.bullet_damage
                 });
                 e.health -= world.player.bullet_damage;
                 if (e.health <= 0.f) {
@@ -151,7 +156,6 @@ void UpdateExp(World &world, const float dt) {
 void UpdateDamagePopup(World &world, const float dt) {
     for (auto &dp: world.damage_popups) {
         dp.pos += dp.vel * dt;
-        //dp.vel *= dt;
         dp.age += dt;
         if (dp.age >= dp.lifetime) {
             dp.dead = true;

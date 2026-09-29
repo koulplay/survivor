@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <format>
 
 #include "draw.h"
 #include "world.h"
@@ -24,9 +25,12 @@ namespace {
     return "?";
 }
 
-[[nodiscard]] const char *GameTimeToTextFormat(const float time) {
-    float secs = static_cast<int>(time) % 60;
-    return TextFormat("%.0f : %.0f", time / 60, secs);
+[[nodiscard]] std::string GameTimeToText(float time) {
+    const int total_seconds = static_cast<int>(time);
+    const int minutes = total_seconds / 60;
+    const int seconds = total_seconds % 60;
+
+    return std::format("{:02}:{:02}", minutes, seconds);
 }
 }
 
@@ -44,13 +48,14 @@ void Draw(const World &world) {
     BeginMode2D(camera);
     constexpr float cell_size = 50.f;
     for (float i = std::floor((world.player.pos.x - kScreenWidth / 2) / cell_size) * cell_size;
-        i <= world.player.pos.x + kScreenWidth / 2;
-        i += cell_size) {
-        DrawLine(i, world.player.pos.y - kScreenHeight / 2, i, world.player.pos.y + kScreenHeight / 2, Fade(GOLD, 0.1f));
+         i <= world.player.pos.x + kScreenWidth / 2;
+         i += cell_size) {
+        DrawLine(i, world.player.pos.y - kScreenHeight / 2, i, world.player.pos.y + kScreenHeight / 2,
+                 Fade(GOLD, 0.1f));
     }
     for (float i = std::floor((world.player.pos.y - kScreenHeight / 2) / cell_size) * cell_size;
-        i <= world.player.pos.y + kScreenHeight / 2;
-        i += cell_size) {
+         i <= world.player.pos.y + kScreenHeight / 2;
+         i += cell_size) {
         DrawLine(world.player.pos.x - kScreenWidth / 2, i, world.player.pos.x + kScreenWidth / 2, i, Fade(GOLD, 0.1f));
     }
 
@@ -71,20 +76,23 @@ void Draw(const World &world) {
     }
 
     for (const auto &dp: world.damage_popups) {
-        DrawText(TextFormat("%.1f", dp.damage), dp.pos.x, dp.pos.y, 10, ORANGE);
+        const std::string damage_popup_text = std::format("{:.1f}", dp.damage);
+        DrawText(damage_popup_text.c_str(), dp.pos.x - MeasureText(damage_popup_text.c_str(), 15) / 2,
+                 dp.pos.y - kEnemyRadius - 15, 15, Fade(ORANGE, (dp.age / dp.lifetime - 1) * -1));
     }
 
     EndMode2D();
 
-    DrawText(GameTimeToTextFormat(world.game_time),
-         (kScreenWidth - MeasureText(GameTimeToTextFormat(world.game_time), 20)) / 2, 50, 20,
-         GOLD);
+    const std::string game_time_text = GameTimeToText(world.game_time);
+    DrawText(game_time_text.c_str(), (kScreenWidth - MeasureText(game_time_text.c_str(), 20)) / 2, 50, 20, GOLD);
 
     DrawRectangleLines(kExpBarPos.x, kExpBarPos.y, kExpBarWidth, kExpBarHeight, GOLD);
     DrawRectangle(kExpBarPos.x, kExpBarPos.y,
                   static_cast<int>(std::min(kExpBarWidth * ExpProgress(world), kExpBarWidth)), kExpBarHeight, GOLD);
-    const char *level_text = TextFormat("LEVEL: %d", world.level);
-    DrawText(level_text, kExpBarPos.x + kExpBarWidth - MeasureText(level_text, 20), kExpBarPos.y + 80, 20, GOLD);
+
+    const std::string level_text = std::format("LEVEL: {}", world.level);
+    DrawText(level_text.c_str(), kExpBarPos.x + kExpBarWidth - MeasureText(level_text.c_str(), 20), kExpBarPos.y + 80,
+             20, GOLD);
 
     if (world.game_state == GameState::LEVELUP) {
         DrawRectangle(0, 0, kScreenWidth, kScreenHeight, Fade(BLACK, 0.6f));
@@ -101,8 +109,9 @@ void Draw(const World &world) {
         }
     }
 
-    DrawText(TextFormat("HP: %.0f", world.player.health),
-             (kScreenWidth - MeasureText(TextFormat("HP: %.0f", world.player.health), 20)) / 2, kScreenHeight - 50, 20,
+    const std::string player_health_text = std::format("HP: {}", world.player.health);
+    DrawText(player_health_text.c_str(),
+             (kScreenWidth - MeasureText(player_health_text.c_str(), 20)) / 2, kScreenHeight - 50, 20,
              WHITE);
     if (world.game_state == GameState::GAMEOVER) {
         DrawText("GAME OVER", (kScreenWidth - MeasureText("GAME OVER", 50)) / 2, kScreenHeight / 2, 50, WHITE);
@@ -111,4 +120,3 @@ void Draw(const World &world) {
     DrawFPS(10, 10);
     EndDrawing();
 }
-
