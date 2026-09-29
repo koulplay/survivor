@@ -109,7 +109,7 @@ void Draw(const World &world) {
         }
     }
 
-    const std::string player_health_text = std::format("HP: {}", world.player.health);
+    const std::string player_health_text = std::format("HP: {}", static_cast<int>(world.player.health));
     DrawText(player_health_text.c_str(),
              (kScreenWidth - MeasureText(player_health_text.c_str(), 20)) / 2, kScreenHeight - 50, 20,
              WHITE);
