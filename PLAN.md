@@ -200,10 +200,10 @@
 - A2: у врага `health` = 10, урон — `Player::bullet_damage` = 5, враг умирает за 2 попадания; кристалл — только при смерти. Было: пуля после попадания без убийства била следующих врагов в том же тике; в прогоне без окна одна пуля попала 52 раза. Условная точка останова в CLion опробована.
 - A3: число урона `DamagePopup` появляется над врагом, поднимается на 10 пикс/с и гаснет за 2 с; враг вспыхивает на 0,05 с (`hit_flash_time`).
 
-Код (последний коммит «player hp fix, plan update»):
+Код (последний коммит «hp text small fix»):
 - `world.h` — константы (в том числе `kPlayerBulletMaxLifetime`, `kDamagePopupSpeed`, `kEnemyFlashTime`), `GameState`, `Upgrade`, структуры `World` (с `game_time` и `damage_popups`), `Player` (с `bullet_damage`), `Enemy` (с `health` и `hit_flash_time`), `Bullet` (с `age`), `DamagePopup`, `Exp`, `LevelUpMenu` и объявление `CardRect`; `world.cpp` — тело `CardRect`: её вызывают и `update.cpp` (мышь в меню), и `draw.cpp` (карточки).
 - `update.h/.cpp` — наружу `Update`, `UpdateLevelUp`, `ApplyUpgrade`; остальное — в безымянном `namespace`: `RandomEdgePoint(const Player&)` (точка на краю видимой области вокруг игрока), `ShouldDieByLifetime` (срок пули вышел), `UpdateSpawn`, `UpdateShooting`, `UpdateBullets`, `UpdateDamagePopup`, `NearestEnemyPos`, `ReadMoveInput` и т. д.
-- `draw.h/.cpp` — наружу `Draw(const World&)`. Камера — локальная `const Camera2D` в `Draw`, каждый кадр собирается из `player.pos` назначенными инициализаторами C++20. Между `BeginMode2D` и `EndMode2D` — мир в мировых координатах: сетка (линии на кратных `cell_size` = 50), затем игрок, враги, пули, кристаллы, числа урона. После `EndMode2D` — интерфейс в экранных координатах. Таймер, уровень, HP и числа урона — через `std::format` в `std::string`, в raylib уходят через `.c_str()`; названия апгрейдов — через `TextFormat`. `ExpProgress`, `UpgradeName` и `GameTimeToText` — в безымянном `namespace`.
+- `draw.h/.cpp` — наружу `Draw(const World&)`. Камера — локальная `const Camera2D` в `Draw`, каждый кадр собирается из `player.pos` назначенными инициализаторами C++20. Между `BeginMode2D` и `EndMode2D` — мир в мировых координатах: сетка (линии на кратных `cell_size` = 50), затем игрок, враги, пули, кристаллы, числа урона. После `EndMode2D` — интерфейс в экранных координатах. Таймер, уровень, HP и числа урона — через `std::format` в `std::string`, в raylib уходят через `.c_str()`; HP при выводе округляется вверх (`std::ceil`), поэтому «HP: 0» — только у мёртвого игрока; названия апгрейдов — через `TextFormat`. `ExpProgress`, `UpgradeName` и `GameTimeToText` — в безымянном `namespace`.
 - `main.cpp` — окно и главный цикл по состояниям `PLAYING`, `LEVELUP`, `GAMEOVER`; камеры в `main` нет.
 
 Мелочи в коде:
@@ -265,7 +265,7 @@
 **A5. Удар по игроку.**
 Новое: таймер неуязвимости; мигание.
 - Не «урон × `dt`, пока касается», а удар и 0,5–1 с неуязвимости.
-- Края: два врага касаются в одном тике; удар ровно в момент конца неуязвимости; урон больше оставшегося HP; HP между 0 и 1 — что показывает экран, пока игрок жив?
+- Края: два врага касаются в одном тике; удар ровно в момент конца неуязвимости; урон больше оставшегося HP.
 
 Готово, когда: HP падает ступенькой, игрок мигает.
 
