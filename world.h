@@ -30,6 +30,10 @@ constexpr float kPlayerBulletMaxLifetime = 10.f;
 constexpr float kDamagePopupSpeed = 10.f;
 constexpr float kEnemyFlashTime = 0.05f;
 
+constexpr float kEnemySpawnTimeBase = 2.f;
+constexpr float kEnemySpawnTimeRatio = 0.001f;
+constexpr float kEnemySpawnTimeMin = 0.5f;
+
 enum class GameState { PLAYING, LEVELUP, GAMEOVER };
 enum class Upgrade { FireRate, MoveSpeed, BulletSpeed, Magnet, Health, RestoreHealth, Count };
 enum class EnemyType { LIGHT, MEDIUM, HEAVY, COUNT };
