@@ -83,13 +83,14 @@ struct EnemyDef {
     float size;
     float speed;
     float exp;
+    float time_to_spawn;
     Color color;
 };
 
 constexpr EnemyDef kEnemyDefs[] = {
-    {.health = 5.f, .damage = 15.f, .size = 5.0f, .speed = 150.f, .exp = 3.f, .color = GREEN},
-    {.health = 10.f, .damage = 30.f, .size = 10.0f, .speed = 50.f, .exp = 5.f, .color = RED},
-    {.health = 20.f, .damage = 30.f, .size = 25.0f, .speed = 20.f, .exp = 8.f, .color = PURPLE}
+    {.health = 5.f, .damage = 15.f, .size = 5.0f, .speed = 150.f, .exp = 3.f, .time_to_spawn = 30.f, .color = GREEN},
+    {.health = 10.f, .damage = 30.f, .size = 10.0f, .speed = 50.f, .exp = 5.f, .time_to_spawn = 0.f, .color = RED},
+    {.health = 20.f, .damage = 30.f, .size = 25.0f, .speed = 20.f, .exp = 8.f, .time_to_spawn = 60.f, .color = PURPLE}
 };
 
 [[nodiscard]] const EnemyDef& GetEnemyDef(EnemyType type);

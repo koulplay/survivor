@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <optional>
 #include <random>
 #include <string>
@@ -63,11 +64,24 @@ namespace {
     return std::max(kEnemySpawnTimeMin, kEnemySpawnTimeBase - world.game_time * kEnemySpawnTimeRatio);
 }
 
+[[nodiscard]] EnemyType EnemyTypeSpawn(const World &world) {
+    std::vector<EnemyType> enemy_to_spawn;
+    enemy_to_spawn.reserve(static_cast<size_t>(EnemyType::COUNT));
+    for (size_t i = 0; i < static_cast<size_t>(EnemyType::COUNT); ++i) {
+        if (GetEnemyDef(static_cast<EnemyType>(i)).time_to_spawn <= world.game_time) {
+            enemy_to_spawn.push_back(static_cast<EnemyType>(i));
+        }
+    }
+    assert(!enemy_to_spawn.empty());
+    return enemy_to_spawn[GetRandomValue(0, enemy_to_spawn.size() - 1)];
+}
+
 void UpdateSpawn(World &world, const float dt) {
     world.enemy_spawn_time += dt;
     if (const float spawn_time = CalculateEnemySpawnTime(world); world.enemy_spawn_time > spawn_time) {
         world.enemy_spawn_time -= spawn_time;
-        const auto enemy_type = static_cast<EnemyType>(GetRandomValue(0, static_cast<int>(EnemyType::COUNT) - 1));
+
+        const EnemyType enemy_type = EnemyTypeSpawn(world);
         world.enemies.emplace_back(RandomEdgePoint(world.player, GetEnemyDef(enemy_type).size), enemy_type);
     }
 }
