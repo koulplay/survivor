@@ -11,16 +11,16 @@
 #include "world.h"
 
 namespace {
-[[nodiscard]] Vector2 RandomEdgePoint(const Player &player) {
+[[nodiscard]] Vector2 RandomEdgePoint(const Player &player,const float margin) {
     const auto x = static_cast<float>(GetRandomValue(static_cast<int>(player.pos.x) - kScreenWidth / 2,
                                                      static_cast<int>(player.pos.x) + kScreenWidth / 2));
     const auto y = static_cast<float>(GetRandomValue(static_cast<int>(player.pos.y) - kScreenHeight / 2,
                                                      static_cast<int>(player.pos.y) + kScreenHeight / 2));
     switch (GetRandomValue(0, 3)) {
-        case 0: return {x, player.pos.y - kScreenHeight / 2};
-        case 1: return {x, player.pos.y + kScreenHeight / 2};
-        case 2: return {player.pos.x - kScreenWidth / 2, y};
-        default: return {player.pos.x + kScreenWidth / 2, y};
+        case 0: return {x, player.pos.y - kScreenHeight / 2 - margin};
+        case 1: return {x, player.pos.y + kScreenHeight / 2 + margin};
+        case 2: return {player.pos.x - kScreenWidth / 2 - margin, y};
+        default: return {player.pos.x + kScreenWidth / 2 + margin, y};
     }
 }
 
@@ -59,12 +59,11 @@ namespace {
     return enemy_pos;
 }
 
-
 void UpdateSpawn(World &world, const float dt) {
     world.enemy_spawn_time += dt;
     if (world.enemy_spawn_time > 1.0f) {
         world.enemy_spawn_time -= 1.0f;
-        world.enemies.emplace_back(RandomEdgePoint(world.player));
+        world.enemies.emplace_back(RandomEdgePoint(world.player, GetEnemyDef(EnemyType::HEAVY).size), EnemyType::HEAVY);
     }
 }
 
@@ -74,10 +73,11 @@ void UpdatePlayer(Player &player, const float dt) {
 
 void UpdateEnemies(World &world, const float dt) {
     for (auto &e: world.enemies) {
+        const EnemyDef& e_def = GetEnemyDef(e.enemy_type);
         e.hit_flash_time = std::max(0.f, e.hit_flash_time - dt);
-        e.pos = Vector2MoveTowards(e.pos, world.player.pos, kEnemySpeed * dt);
-        if (CheckCollisionCircleRec(e.pos, kEnemyRadius, world.player.rect())) {
-            world.player.health -= kEnemyDamage * dt;
+        e.pos = Vector2MoveTowards(e.pos, world.player.pos, e_def.speed * dt);
+        if (CheckCollisionCircleRec(e.pos, e_def.size, world.player.rect())) {
+            world.player.health -= e_def.damage * dt;
         }
     }
 }
@@ -120,18 +120,19 @@ void UpdateBullets(World &world, const float dt) {
             if (b.dead) {
                 break;
             }
-            if (CheckCollisionCircles(b.pos, world.player.bullet_radius, e.pos, kEnemyRadius)) {
+            if (const EnemyDef& e_def = GetEnemyDef(e.enemy_type); CheckCollisionCircles(b.pos, world.player.bullet_radius, e.pos, e_def.size)) {
                 e.hit_flash_time = kEnemyFlashTime;
                 world.damage_popups.push_back({
                     .pos = e.pos,
                     .vel = Vector2{0.f, -kDamagePopupSpeed},
-                    .damage = world.player.bullet_damage
+                    .damage = world.player.bullet_damage,
+                    .enemy_type = e.enemy_type
                 });
                 e.health -= world.player.bullet_damage;
                 if (e.health <= 0.f) {
                     e.dead = true;
                     b.dead = true;
-                    world.exps.push_back({e.pos});
+                    world.exps.push_back({e.pos, e_def.exp});
                     break;
                 }
                 b.dead = true;
@@ -147,7 +148,7 @@ void UpdateExp(World &world, const float dt) {
             exp.pos = Vector2MoveTowards(exp.pos, world.player.pos, kExpSpeed * dt);
         }
         if (CheckCollisionCircleRec(exp.pos, kExpRadius, world.player.rect())) {
-            world.current_exp += kExpValue;
+            world.current_exp += exp.value;
             exp.dead = true;
         }
     }

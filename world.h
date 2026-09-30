@@ -7,13 +7,8 @@
 constexpr int kScreenWidth = 1280;
 constexpr int kScreenHeight = 720;
 
-constexpr float kEnemyRadius = 10.0f;
-constexpr float kEnemySpeed = 50.f;
-constexpr float kEnemyDamage = 30.f;
-
 constexpr float kExpRadius = 2.0f;
 constexpr float kExpSpeed = 300.f;
-constexpr float kExpValue = 5.f;
 
 constexpr float kExpBarWidth = 300.f;
 constexpr float kExpBarHeight = 50.f;
@@ -39,6 +34,8 @@ enum class GameState { PLAYING, LEVELUP, GAMEOVER };
 enum class Upgrade { FireRate, MoveSpeed, BulletSpeed, Magnet, Health, RestoreHealth, Count };
 enum class EnemyType { LIGHT, MEDIUM, HEAVY, COUNT };
 
+[[nodiscard]] Rectangle CardRect(int i);
+
 struct LevelUpMenu {
     std::array<Upgrade, 3> options{};
     int selected = 0;
@@ -46,6 +43,7 @@ struct LevelUpMenu {
 
 struct Exp {
     Vector2 pos;
+    float value;
     bool dead = false;
 };
 
@@ -84,17 +82,27 @@ struct EnemyDef {
     Color color;
 };
 
-struct Enemy {
-    Vector2 pos;
-    float health = 10.f;
-    float hit_flash_time = 0.f;
-    bool dead = false;
+constexpr EnemyDef kEnemyDefs[] = {
+    {.health = 5.f, .damage = 15.f, .size = 5.0f, .speed = 150.f, .exp = 3.f, .color = GREEN},
+    {.health = 10.f, .damage = 30.f, .size = 10.0f, .speed = 50.f, .exp = 5.f, .color = RED},
+    {.health = 20.f, .damage = 30.f, .size = 25.0f, .speed = 20.f, .exp = 8.f, .color = PURPLE}
 };
 
-constexpr EnemyDef kEnemyDefs[] = {
-    {.health = 10.f, .damage = 30.f, .size = 10.0f, .speed = 50.f, .exp = 5.f, .color = RED},
-    {.health = 10.f, .damage = 30.f, .size = 10.0f, .speed = 50.f, .exp = 5.f, .color = RED},
-    {.health = 10.f, .damage = 30.f, .size = 10.0f, .speed = 50.f, .exp = 5.f, .color = RED}
+[[nodiscard]] const EnemyDef& GetEnemyDef(EnemyType type);
+
+struct Enemy {
+    Enemy(const Vector2 pos, const EnemyType& enemy_def)
+        : pos(pos)
+        , enemy_type(enemy_def){
+        health = GetEnemyDef(enemy_def).health;
+    }
+
+    Vector2 pos;
+    EnemyType enemy_type;
+    float health;
+
+    float hit_flash_time = 0.f;
+    bool dead = false;
 };
 
 static_assert(static_cast<std::size_t>(EnemyType::COUNT) == std::size(kEnemyDefs));
@@ -105,6 +113,7 @@ struct DamagePopup {
     float damage = 0.f;
     float lifetime = 2.f;
     float age = 0.f;
+    EnemyType enemy_type;
     bool dead = false;
 };
 
@@ -123,5 +132,3 @@ struct World {
     float enemy_spawn_time = 0.f;
     float game_time = 0.f;
 };
-
-[[nodiscard]] Rectangle CardRect(int i);
