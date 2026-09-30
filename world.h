@@ -35,13 +35,9 @@ constexpr float kPlayerBulletMaxLifetime = 10.f;
 constexpr float kDamagePopupSpeed = 10.f;
 constexpr float kEnemyFlashTime = 0.05f;
 
-enum class GameState {
-    PLAYING,
-    LEVELUP,
-    GAMEOVER
-};
-
+enum class GameState { PLAYING, LEVELUP, GAMEOVER };
 enum class Upgrade { FireRate, MoveSpeed, BulletSpeed, Magnet, Health, RestoreHealth, Count };
+enum class EnemyType { LIGHT, MEDIUM, HEAVY, COUNT };
 
 struct LevelUpMenu {
     std::array<Upgrade, 3> options{};
@@ -79,12 +75,29 @@ struct Player {
     }
 };
 
+struct EnemyDef {
+    float health;
+    float damage;
+    float size;
+    float speed;
+    float exp;
+    Color color;
+};
+
 struct Enemy {
     Vector2 pos;
     float health = 10.f;
     float hit_flash_time = 0.f;
     bool dead = false;
 };
+
+constexpr EnemyDef kEnemyDefs[] = {
+    {.health = 10.f, .damage = 30.f, .size = 10.0f, .speed = 50.f, .exp = 5.f, .color = RED},
+    {.health = 10.f, .damage = 30.f, .size = 10.0f, .speed = 50.f, .exp = 5.f, .color = RED},
+    {.health = 10.f, .damage = 30.f, .size = 10.0f, .speed = 50.f, .exp = 5.f, .color = RED}
+};
+
+static_assert(static_cast<std::size_t>(EnemyType::COUNT) == std::size(kEnemyDefs));
 
 struct DamagePopup {
     Vector2 pos;
