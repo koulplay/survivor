@@ -12,7 +12,7 @@
 #include "world.h"
 
 namespace {
-[[nodiscard]] Vector2 RandomEdgePoint(const Player &player,const float margin) {
+[[nodiscard]] Vector2 RandomEdgePoint(const Player &player, const float margin) {
     const auto x = static_cast<float>(GetRandomValue(static_cast<int>(player.pos.x) - kScreenWidth / 2,
                                                      static_cast<int>(player.pos.x) + kScreenWidth / 2));
     const auto y = static_cast<float>(GetRandomValue(static_cast<int>(player.pos.y) - kScreenHeight / 2,
@@ -48,41 +48,41 @@ namespace {
         return std::nullopt;
     }
 
-    float distance_to_enemy = Vector2Distance(world.player.pos, world.enemies[0].pos);
-    Vector2 enemy_pos = world.enemies[0].pos;
+    float best_distance = Vector2Distance(world.player.pos, world.enemies[0].pos);
+    Vector2 nearest_pos = world.enemies[0].pos;
     for (auto &e: world.enemies) {
         const float new_distance = Vector2Distance(world.player.pos, e.pos);
-        if (new_distance < distance_to_enemy) {
-            distance_to_enemy = new_distance;
-            enemy_pos = e.pos;
+        if (new_distance < best_distance) {
+            best_distance = new_distance;
+            nearest_pos = e.pos;
         }
     }
-    return enemy_pos;
+    return nearest_pos;
 }
 
-[[nodiscard]] float CalculateEnemySpawnTime(const World &world) {
-    return std::max(kEnemySpawnTimeMin, kEnemySpawnTimeBase - world.game_time * kEnemySpawnTimeRatio);
+[[nodiscard]] float EnemySpawnInterval(const float game_time) {
+    return std::max(kEnemySpawnIntervalMin, kEnemySpawnIntervalStart - game_time * kEnemySpawnIntervalDecreasePerSec);
 }
 
-[[nodiscard]] EnemyType EnemyTypeSpawn(const World &world) {
-    std::vector<EnemyType> enemy_to_spawn;
-    enemy_to_spawn.reserve(static_cast<size_t>(EnemyType::COUNT));
-    for (size_t i = 0; i < static_cast<size_t>(EnemyType::COUNT); ++i) {
-        if (GetEnemyDef(static_cast<EnemyType>(i)).time_to_spawn <= world.game_time) {
-            enemy_to_spawn.push_back(static_cast<EnemyType>(i));
+[[nodiscard]] EnemyType RandomEnemyType(const float game_time) {
+    std::vector<EnemyType> candidates;
+    candidates.reserve(static_cast<size_t>(EnemyType::Count));
+    for (size_t i = 0; i < static_cast<size_t>(EnemyType::Count); ++i) {
+        if (GetEnemyDef(static_cast<EnemyType>(i)).appear_time <= game_time) {
+            candidates.push_back(static_cast<EnemyType>(i));
         }
     }
-    assert(!enemy_to_spawn.empty());
-    return enemy_to_spawn[GetRandomValue(0, enemy_to_spawn.size() - 1)];
+    assert(!candidates.empty());
+    return candidates[GetRandomValue(0, candidates.size() - 1)];
 }
 
 void UpdateSpawn(World &world, const float dt) {
-    world.enemy_spawn_time += dt;
-    if (const float spawn_time = CalculateEnemySpawnTime(world); world.enemy_spawn_time > spawn_time) {
-        world.enemy_spawn_time -= spawn_time;
+    world.enemy_spawn_timer += dt;
+    if (const float interval = EnemySpawnInterval(world.game_time); world.enemy_spawn_timer > interval) {
+        world.enemy_spawn_timer -= interval;
 
-        const EnemyType enemy_type = EnemyTypeSpawn(world);
-        world.enemies.emplace_back(RandomEdgePoint(world.player, GetEnemyDef(enemy_type).size), enemy_type);
+        const EnemyType enemy_type = RandomEnemyType(world.game_time);
+        world.enemies.emplace_back(RandomEdgePoint(world.player, GetEnemyDef(enemy_type).radius), enemy_type);
     }
 }
 
@@ -92,10 +92,10 @@ void UpdatePlayer(Player &player, const float dt) {
 
 void UpdateEnemies(World &world, const float dt) {
     for (auto &e: world.enemies) {
-        const EnemyDef& e_def = GetEnemyDef(e.enemy_type);
+        const EnemyDef &e_def = GetEnemyDef(e.type);
         e.hit_flash_time = std::max(0.f, e.hit_flash_time - dt);
         e.pos = Vector2MoveTowards(e.pos, world.player.pos, e_def.speed * dt);
-        if (CheckCollisionCircleRec(e.pos, e_def.size, world.player.rect())) {
+        if (CheckCollisionCircleRec(e.pos, e_def.radius, world.player.rect())) {
             world.player.health -= e_def.damage * dt;
         }
     }
@@ -104,16 +104,16 @@ void UpdateEnemies(World &world, const float dt) {
 // таймер + новая пуля в ближайшего
 void UpdateShooting(World &world, const float dt) {
     Player &p = world.player;
-    p.bullet_spawn_time += dt;
-    if (p.bullet_spawn_time < p.fire_rate) return;
+    p.shot_timer += dt;
+    if (p.shot_timer < p.fire_interval) return;
 
     const std::optional<Vector2> target = NearestEnemyPos(world);
     if (!target) {
-        p.bullet_spawn_time = p.fire_rate;
+        p.shot_timer = p.fire_interval;
         return;
     }
 
-    p.bullet_spawn_time -= p.fire_rate;
+    p.shot_timer -= p.fire_interval;
     world.bullets.push_back({p.pos, Vector2Normalize(*target - p.pos) * p.bullet_speed});
 }
 
@@ -139,13 +139,14 @@ void UpdateBullets(World &world, const float dt) {
             if (b.dead) {
                 break;
             }
-            if (const EnemyDef& e_def = GetEnemyDef(e.enemy_type); CheckCollisionCircles(b.pos, world.player.bullet_radius, e.pos, e_def.size)) {
-                e.hit_flash_time = kEnemyFlashTime;
+            if (const EnemyDef &e_def = GetEnemyDef(e.type); CheckCollisionCircles(
+                b.pos, world.player.bullet_radius, e.pos, e_def.radius)) {
+                e.hit_flash_time = kEnemyFlashDuration;
                 world.damage_popups.push_back({
                     .pos = e.pos,
                     .vel = Vector2{0.f, -kDamagePopupSpeed},
                     .damage = world.player.bullet_damage,
-                    .enemy_type = e.enemy_type
+                    .enemy_type = e.type
                 });
                 e.health -= world.player.bullet_damage;
                 if (e.health <= 0.f) {
@@ -173,7 +174,7 @@ void UpdateExp(World &world, const float dt) {
     }
 }
 
-void UpdateDamagePopup(World &world, const float dt) {
+void UpdateDamagePopups(World &world, const float dt) {
     for (auto &dp: world.damage_popups) {
         dp.pos += dp.vel * dt;
         dp.age += dt;
@@ -184,26 +185,26 @@ void UpdateDamagePopup(World &world, const float dt) {
 }
 
 void UpdateGameState(World &world) {
-    if (world.player.health <= 0.f && world.game_state != GameState::GAMEOVER) {
+    if (world.player.health <= 0.f && world.game_state != GameState::GameOver) {
         world.player.health = 0.f;
-        world.game_state = GameState::GAMEOVER;
+        world.game_state = GameState::GameOver;
     }
-    else if (world.current_exp >= world.exp_to_level && world.game_state != GameState::LEVELUP) {
+    else if (world.current_exp >= world.exp_to_level && world.game_state != GameState::LevelUp) {
         static std::mt19937 rng{std::random_device{}()};
         std::array<Upgrade, static_cast<int>(Upgrade::Count)> all{};
         for (int i = 0; i < static_cast<int>(all.size()); ++i) all[i] = static_cast<Upgrade>(i);
         std::shuffle(all.begin(), all.end(), rng);
-        for (int i = 0; i < 3; ++i) world.lvl_menu.options[i] = all[i];
-        world.lvl_menu.selected = 0;
+        for (int i = 0; i < 3; ++i) world.level_up_menu.options[i] = all[i];
+        world.level_up_menu.selected = 0;
 
         ++world.level;
-        const float mod = world.current_exp - world.exp_to_level;
-        world.current_exp = mod;
-        world.exp_to_level *= 1.2f;
-        world.game_state = GameState::LEVELUP;
+        const float leftover_exp = world.current_exp - world.exp_to_level;
+        world.current_exp = leftover_exp;
+        world.exp_to_level *= kExpToLevelMultiplier;
+        world.game_state = GameState::LevelUp;
     }
     else {
-        world.game_state = GameState::PLAYING;
+        world.game_state = GameState::Playing;
     }
 }
 }
@@ -217,7 +218,7 @@ void Update(World &world, const float dt) {
     UpdateShooting(world, dt);
     UpdateBullets(world, dt);
     UpdateExp(world, dt);
-    UpdateDamagePopup(world, dt);
+    UpdateDamagePopups(world, dt);
 
     UpdateGameState(world);
 
@@ -230,25 +231,25 @@ void Update(World &world, const float dt) {
 void ApplyUpgrade(Player &p, Upgrade u) {
     // только изменение
     switch (u) {
-        case Upgrade::FireRate: p.fire_rate = std::max(0.1f, p.fire_rate - kBuffFireRate);
+        case Upgrade::FireInterval: p.fire_interval = std::max(0.1f, p.fire_interval - kUpgradeFireInterval);
             break;
-        case Upgrade::MoveSpeed: p.speed += kBuffMoveSpeed;
+        case Upgrade::MoveSpeed: p.speed += kUpgradeMoveSpeed;
             break;
-        case Upgrade::BulletSpeed: p.bullet_speed += kBuffBulletSpeed;
+        case Upgrade::BulletSpeed: p.bullet_speed += kUpgradeBulletSpeed;
             break;
-        case Upgrade::Magnet: p.magnet_radius += kBuffMagnet;
+        case Upgrade::Magnet: p.magnet_radius += kUpgradeMagnet;
             break;
-        case Upgrade::Health: p.max_health += kBuffHealth;
-            p.health += kBuffHealth;
+        case Upgrade::MaxHealth: p.max_health += kUpgradeMaxHealth;
+            p.health += kUpgradeMaxHealth;
             break;
-        case Upgrade::RestoreHealth: p.health = std::min(p.health + kBuffRestoreHealth, p.max_health);
+        case Upgrade::RestoreHealth: p.health = std::min(p.health + kUpgradeRestoreHealth, p.max_health);
             break;
         case Upgrade::Count: break;
     }
 }
 
 bool UpdateLevelUp(World &world) {
-    auto &m = world.lvl_menu;
+    auto &m = world.level_up_menu;
     if (IsKeyPressed(KEY_RIGHT)) m.selected = (m.selected + 1) % 3;
     if (IsKeyPressed(KEY_LEFT)) m.selected = (m.selected + 3 - 1) % 3;
     const bool mouse_moved = Vector2Length(GetMouseDelta()) > 0.0f;

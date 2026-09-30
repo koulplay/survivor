@@ -9,16 +9,16 @@ int main() {
     World world;
     while (!WindowShouldClose()) {
         switch (world.game_state) {
-            case GameState::PLAYING:
+            case GameState::Playing:
                 Update(world, std::min(GetFrameTime(), 0.1f));
                 break;
-            case GameState::LEVELUP:
+            case GameState::LevelUp:
                 if (UpdateLevelUp(world)) {
-                    ApplyUpgrade(world.player, world.lvl_menu.options[world.lvl_menu.selected]);
-                    world.game_state = GameState::PLAYING;
+                    ApplyUpgrade(world.player, world.level_up_menu.options[world.level_up_menu.selected]);
+                    world.game_state = GameState::Playing;
                 }
                 break;
-            case GameState::GAMEOVER:
+            case GameState::GameOver:
                 if (IsKeyPressed(KEY_R)) {
                     world = World{};
                 }

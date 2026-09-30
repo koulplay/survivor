@@ -14,12 +14,12 @@ namespace {
 [[nodiscard]] const char *UpgradeName(Upgrade u) {
     // только текст
     switch (u) {
-        case Upgrade::FireRate: return TextFormat("Shot Interval -%.1f/s", kBuffFireRate);
-        case Upgrade::MoveSpeed: return TextFormat("MoveSpeed +%.1f/s", kBuffMoveSpeed);
-        case Upgrade::BulletSpeed: return TextFormat("BulletSpeed +%.1f/s", kBuffBulletSpeed);
-        case Upgrade::Magnet: return TextFormat("Magnet +%.1f", kBuffMagnet);
-        case Upgrade::Health: return TextFormat("Health +%.1f", kBuffHealth);
-        case Upgrade::RestoreHealth: return TextFormat("RestoreHealth +%.1f", kBuffRestoreHealth);
+        case Upgrade::FireInterval: return TextFormat("Shot Interval -%.1f/s", kUpgradeFireInterval);
+        case Upgrade::MoveSpeed: return TextFormat("MoveSpeed +%.1f/s", kUpgradeMoveSpeed);
+        case Upgrade::BulletSpeed: return TextFormat("BulletSpeed +%.1f/s", kUpgradeBulletSpeed);
+        case Upgrade::Magnet: return TextFormat("Magnet +%.1f", kUpgradeMagnet);
+        case Upgrade::MaxHealth: return TextFormat("MaxHealth +%.1f", kUpgradeMaxHealth);
+        case Upgrade::RestoreHealth: return TextFormat("RestoreHealth +%.1f", kUpgradeRestoreHealth);
         case Upgrade::Count: break;
     }
     return "?";
@@ -61,12 +61,12 @@ void Draw(const World &world) {
 
     DrawRectangleRec(world.player.rect(), RAYWHITE);
     for (const auto &e: world.enemies) {
-        const EnemyDef& e_def = GetEnemyDef(e.enemy_type);
+        const EnemyDef &e_def = GetEnemyDef(e.type);
         if (e.hit_flash_time > 0.f) {
-            DrawCircleV(e.pos, e_def.size, ORANGE);
+            DrawCircleV(e.pos, e_def.radius, ORANGE);
         }
         else {
-            DrawCircleV(e.pos, e_def.size, e_def.color);
+            DrawCircleV(e.pos, e_def.radius, e_def.color);
         }
     }
     for (const auto &b: world.bullets) {
@@ -79,7 +79,8 @@ void Draw(const World &world) {
     for (const auto &dp: world.damage_popups) {
         const std::string damage_popup_text = std::format("{:.1f}", dp.damage);
         DrawText(damage_popup_text.c_str(), dp.pos.x - MeasureText(damage_popup_text.c_str(), 15) / 2,
-                 dp.pos.y - GetEnemyDef(dp.enemy_type).size - 15, 15, Fade(GetEnemyDef(dp.enemy_type).color, (dp.age / dp.lifetime - 1) * -1));
+                 dp.pos.y - GetEnemyDef(dp.enemy_type).radius - 15, 15,
+                 Fade(GetEnemyDef(dp.enemy_type).color, (dp.age / dp.lifetime - 1) * -1));
     }
 
     EndMode2D();
@@ -95,9 +96,9 @@ void Draw(const World &world) {
     DrawText(level_text.c_str(), kExpBarPos.x + kExpBarWidth - MeasureText(level_text.c_str(), 20), kExpBarPos.y + 80,
              20, GOLD);
 
-    if (world.game_state == GameState::LEVELUP) {
+    if (world.game_state == GameState::LevelUp) {
         DrawRectangle(0, 0, kScreenWidth, kScreenHeight, Fade(BLACK, 0.6f));
-        auto &m = world.lvl_menu;
+        auto &m = world.level_up_menu;
         for (int i = 0; i < 3; ++i) {
             Rectangle rec = CardRect(i);
             DrawRectangleRec(rec, WHITE);
@@ -114,7 +115,7 @@ void Draw(const World &world) {
     DrawText(player_health_text.c_str(),
              (kScreenWidth - MeasureText(player_health_text.c_str(), 20)) / 2, kScreenHeight - 50, 20,
              WHITE);
-    if (world.game_state == GameState::GAMEOVER) {
+    if (world.game_state == GameState::GameOver) {
         DrawText("GAME OVER", (kScreenWidth - MeasureText("GAME OVER", 50)) / 2, kScreenHeight / 2, 50, WHITE);
     }
 

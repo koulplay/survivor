@@ -9,6 +9,7 @@ constexpr int kScreenHeight = 720;
 
 constexpr float kExpRadius = 2.0f;
 constexpr float kExpSpeed = 300.f;
+constexpr float kExpToLevelMultiplier = 1.2f;
 
 constexpr float kExpBarWidth = 300.f;
 constexpr float kExpBarHeight = 50.f;
@@ -18,25 +19,27 @@ constexpr float kCardWidth = 300.f;
 constexpr float kCardHeight = 500.f;
 constexpr float kCardGap = 50.f;
 
-constexpr float kBuffFireRate = 0.2f;
-constexpr float kBuffMoveSpeed = 10.f;
-constexpr float kBuffBulletSpeed = 25.f;
-constexpr float kBuffMagnet = 5.f;
-constexpr float kBuffHealth = 5.f;
-constexpr float kBuffRestoreHealth = 25.f;
+constexpr float kUpgradeFireInterval = 0.2f;
+constexpr float kUpgradeMoveSpeed = 10.f;
+constexpr float kUpgradeBulletSpeed = 25.f;
+constexpr float kUpgradeMagnet = 5.f;
+constexpr float kUpgradeMaxHealth = 5.f;
+constexpr float kUpgradeRestoreHealth = 25.f;
 
 constexpr float kPlayerBulletMaxLifetime = 10.f;
 
 constexpr float kDamagePopupSpeed = 10.f;
-constexpr float kEnemyFlashTime = 0.05f;
+constexpr float kEnemyFlashDuration = 0.05f;
 
-constexpr float kEnemySpawnTimeBase = 2.f;
-constexpr float kEnemySpawnTimeRatio = 0.001f;
-constexpr float kEnemySpawnTimeMin = 0.5f;
+constexpr float kEnemySpawnIntervalStart = 2.f;
+constexpr float kEnemySpawnIntervalDecreasePerSec = 0.001f;
+constexpr float kEnemySpawnIntervalMin = 0.5f;
 
-enum class GameState { PLAYING, LEVELUP, GAMEOVER };
-enum class Upgrade { FireRate, MoveSpeed, BulletSpeed, Magnet, Health, RestoreHealth, Count };
-enum class EnemyType { LIGHT, MEDIUM, HEAVY, COUNT };
+enum class GameState { Playing, LevelUp, GameOver };
+
+enum class Upgrade { FireInterval, MoveSpeed, BulletSpeed, Magnet, MaxHealth, RestoreHealth, Count };
+
+enum class EnemyType { Light, Medium, Heavy, Count };
 
 [[nodiscard]] Rectangle CardRect(int i);
 
@@ -61,7 +64,7 @@ struct Bullet {
 struct Player {
     float size = 32.f;
     float speed = 150.f;
-    float fire_rate = 2.f;
+    float fire_interval = 2.f;
     float bullet_radius = 3.f;
     float bullet_speed = 300.f;
     float bullet_damage = 5.f;
@@ -69,7 +72,7 @@ struct Player {
     Vector2 pos{kScreenWidth / 2.f, kScreenHeight / 2.f};
     float health = 100.f;
     float max_health = 100.f;
-    float bullet_spawn_time = 0.f;
+    float shot_timer = 0.f;
     float magnet_radius = 60.f;
 
     [[nodiscard]] Rectangle rect() const {
@@ -78,39 +81,39 @@ struct Player {
 };
 
 struct EnemyDef {
-    float health;
+    float max_health;
     float damage;
-    float size;
+    float radius;
     float speed;
     float exp;
-    float time_to_spawn;
+    float appear_time;
     Color color;
 };
 
 constexpr EnemyDef kEnemyDefs[] = {
-    {.health = 5.f, .damage = 15.f, .size = 5.0f, .speed = 150.f, .exp = 3.f, .time_to_spawn = 30.f, .color = GREEN},
-    {.health = 10.f, .damage = 30.f, .size = 10.0f, .speed = 50.f, .exp = 5.f, .time_to_spawn = 0.f, .color = RED},
-    {.health = 20.f, .damage = 30.f, .size = 25.0f, .speed = 20.f, .exp = 8.f, .time_to_spawn = 60.f, .color = PURPLE}
+    { .max_health = 5.f, .damage = 15.f, .radius = 5.0f, .speed = 150.f, .exp = 3.f, .appear_time = 30.f, .color = GREEN },
+    { .max_health = 10.f, .damage = 30.f, .radius = 10.0f, .speed = 50.f, .exp = 5.f, .appear_time = 0.f, .color = RED },
+    { .max_health = 20.f, .damage = 30.f, .radius = 25.0f, .speed = 20.f, .exp = 8.f, .appear_time = 60.f, .color = PURPLE }
 };
 
-[[nodiscard]] const EnemyDef& GetEnemyDef(EnemyType type);
+[[nodiscard]] const EnemyDef &GetEnemyDef(EnemyType type);
 
 struct Enemy {
-    Enemy(const Vector2 pos, const EnemyType& enemy_def)
+    Enemy(const Vector2 pos, const EnemyType &type)
         : pos(pos)
-        , enemy_type(enemy_def){
-        health = GetEnemyDef(enemy_def).health;
+          , type(type) {
+        health = GetEnemyDef(type).max_health;
     }
 
     Vector2 pos;
-    EnemyType enemy_type;
+    EnemyType type;
     float health;
 
     float hit_flash_time = 0.f;
     bool dead = false;
 };
 
-static_assert(static_cast<std::size_t>(EnemyType::COUNT) == std::size(kEnemyDefs));
+static_assert(static_cast<std::size_t>(EnemyType::Count) == std::size(kEnemyDefs));
 
 struct DamagePopup {
     Vector2 pos;
@@ -129,11 +132,11 @@ struct World {
     std::vector<Exp> exps;
     std::vector<DamagePopup> damage_popups;
 
-    LevelUpMenu lvl_menu;
-    GameState game_state = GameState::PLAYING;
+    LevelUpMenu level_up_menu;
+    GameState game_state = GameState::Playing;
     float current_exp = 0.f;
     float exp_to_level = 1.f;
     int level = 0;
-    float enemy_spawn_time = 0.f;
+    float enemy_spawn_timer = 0.f;
     float game_time = 0.f;
 };
