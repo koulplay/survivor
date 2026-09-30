@@ -63,7 +63,8 @@ void UpdateSpawn(World &world, const float dt) {
     world.enemy_spawn_time += dt;
     if (world.enemy_spawn_time > 1.0f) {
         world.enemy_spawn_time -= 1.0f;
-        world.enemies.emplace_back(RandomEdgePoint(world.player, GetEnemyDef(EnemyType::HEAVY).size), EnemyType::HEAVY);
+        const auto enemy_type = static_cast<EnemyType>(GetRandomValue(0, static_cast<int>(EnemyType::COUNT) - 1));
+        world.enemies.emplace_back(RandomEdgePoint(world.player, GetEnemyDef(enemy_type).size), enemy_type);
     }
 }
 
