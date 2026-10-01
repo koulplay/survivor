@@ -98,10 +98,30 @@ void UpdateEnemies(World &world, const float dt) {
         const EnemyDef &e_def = GetEnemyDef(e.type);
         e.hit_flash_time = std::max(0.f, e.hit_flash_time - dt);
         e.pos = Vector2MoveTowards(e.pos, world.player.pos, e_def.speed * dt);
-        if (CheckCollisionCircleRec(e.pos, e_def.radius, world.player.rect()) && world.player.invulnerability_timer <= 0.f) {
-            world.player.health -= e_def.damage;
-            world.player.invulnerability_timer = kPlayerInvulnerabilityDuration;
+    }
+}
+
+[[nodiscard]] std::optional<float> MaxContactDamage(const World &world) {
+    std::optional<float> max_damage;
+    for (auto &e: world.enemies) {
+        const EnemyDef &e_def = GetEnemyDef(e.type);
+        if (CheckCollisionCircleRec(e.pos, e_def.radius, world.player.rect())) {
+            if (max_damage != std::nullopt) {
+                max_damage = std::max(max_damage.value(), e_def.damage);
+            }
+            else {
+                max_damage = e_def.damage;
+            }
         }
+    }
+    return max_damage;
+}
+
+void UpdateContactDamage(World &world) {
+    if (world.player.invulnerability_timer > 0.f) return;
+    if (const std::optional max_damage = MaxContactDamage(world); max_damage != std::nullopt) {
+        world.player.health -= max_damage.value();
+        world.player.invulnerability_timer = kPlayerInvulnerabilityDuration;
     }
 }
 
@@ -219,6 +239,7 @@ void Update(World &world, const float dt) {
     UpdateSpawn(world, dt);
     UpdatePlayer(world.player, dt);
     UpdateEnemies(world, dt);
+    UpdateContactDamage(world);
     UpdateShooting(world, dt);
     UpdateBullets(world, dt);
     UpdateExp(world, dt);
