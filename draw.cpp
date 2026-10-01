@@ -33,9 +33,10 @@ namespace {
     return std::format("{:02}:{:02}", minutes, seconds);
 }
 
-[[nodiscard]] bool IsPlayerVisible(const float time) {
-    const int phase = static_cast<int>(time / kPlayerBlinkPhaseDuration);
-    return phase % 2 == 0;
+[[nodiscard]] bool IsPlayerVisible(const float invulnerability_timer) {
+    if (invulnerability_timer <= 0.f) return true;
+    const int phase = static_cast<int>(invulnerability_timer / kPlayerBlinkPhaseDuration);
+    return phase % 2 == 1;
 }
 }
 
