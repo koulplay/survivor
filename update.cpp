@@ -87,6 +87,9 @@ void UpdateSpawn(World &world, const float dt) {
 }
 
 void UpdatePlayer(Player &player, const float dt) {
+    if (player.invulnerability_timer > 0.f) {
+        player.invulnerability_timer = std::max(0.f, player.invulnerability_timer - dt);
+    }
     player.pos += ReadMoveInput() * (player.speed * dt);
 }
 
@@ -95,8 +98,9 @@ void UpdateEnemies(World &world, const float dt) {
         const EnemyDef &e_def = GetEnemyDef(e.type);
         e.hit_flash_time = std::max(0.f, e.hit_flash_time - dt);
         e.pos = Vector2MoveTowards(e.pos, world.player.pos, e_def.speed * dt);
-        if (CheckCollisionCircleRec(e.pos, e_def.radius, world.player.rect())) {
-            world.player.health -= e_def.damage * dt;
+        if (CheckCollisionCircleRec(e.pos, e_def.radius, world.player.rect()) && world.player.invulnerability_timer <= 0.f) {
+            world.player.health -= e_def.damage;
+            world.player.invulnerability_timer = kPlayerInvulnerabilityDuration;
         }
     }
 }

@@ -25,12 +25,17 @@ namespace {
     return "?";
 }
 
-[[nodiscard]] std::string GameTimeToText(float time) {
+[[nodiscard]] std::string GameTimeToText(const float time) {
     const int total_seconds = static_cast<int>(time);
     const int minutes = total_seconds / 60;
     const int seconds = total_seconds % 60;
 
     return std::format("{:02}:{:02}", minutes, seconds);
+}
+
+[[nodiscard]] bool IsPlayerVisible(const float time) {
+    const int phase = static_cast<int>(time / kPlayerBlinkPhaseDuration);
+    return phase % 2 == 0;
 }
 }
 
@@ -59,7 +64,10 @@ void Draw(const World &world) {
         DrawLine(world.player.pos.x - kScreenWidth / 2, i, world.player.pos.x + kScreenWidth / 2, i, Fade(GOLD, 0.1f));
     }
 
-    DrawRectangleRec(world.player.rect(), RAYWHITE);
+    if (IsPlayerVisible(world.player.invulnerability_timer) || world.game_state == GameState::GameOver) {
+        DrawRectangleRec(world.player.rect(), RAYWHITE);
+    }
+
     for (const auto &e: world.enemies) {
         const EnemyDef &e_def = GetEnemyDef(e.type);
         if (e.hit_flash_time > 0.f) {

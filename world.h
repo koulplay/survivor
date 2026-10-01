@@ -35,6 +35,9 @@ constexpr float kEnemySpawnIntervalStart = 2.f;
 constexpr float kEnemySpawnIntervalDecreasePerSec = 0.001f;
 constexpr float kEnemySpawnIntervalMin = 0.5f;
 
+constexpr float kPlayerInvulnerabilityDuration = 0.8f;
+constexpr float kPlayerBlinkPhaseDuration = 0.2f;
+
 enum class GameState { Playing, LevelUp, GameOver };
 
 enum class Upgrade { FireInterval, MoveSpeed, BulletSpeed, Magnet, MaxHealth, RestoreHealth, Count };
@@ -74,6 +77,8 @@ struct Player {
     float max_health = 100.f;
     float shot_timer = 0.f;
     float magnet_radius = 60.f;
+
+    float invulnerability_timer = 0.f;
 
     [[nodiscard]] Rectangle rect() const {
         return {pos.x - size / 2, pos.y - size / 2, size, size};
