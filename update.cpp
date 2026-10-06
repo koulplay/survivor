@@ -101,6 +101,28 @@ void UpdateEnemies(World &world, const float dt) {
     }
 }
 
+void UpdateSeparation(World &world, const float dt) {
+    for (auto &self: world.enemies) {
+        const auto &self_def = GetEnemyDef(self.type);
+        for (auto &other: world.enemies) {
+            if (&self == &other) continue;
+            const auto &other_def = GetEnemyDef(other.type);
+            if (!CheckCollisionCircles(self.pos, self_def.radius, other.pos, other_def.radius)) continue;
+
+            const float r = Vector2Length(self.pos - other.pos);
+            const float weight = 1.f - r / (self_def.radius + other_def.radius);
+            Vector2 direction = Vector2Normalize(other.pos - self.pos);
+            if (r < 0.0001f) {
+                if (&self > &other) direction = {1.f, 0.f};
+                else direction = {-1.f, 0.f};
+            }
+            Vector2 push = direction * weight * other_def.speed * kSeparationSpeedFactor * dt;
+            Vector2ClampValue(push, 0.f,other_def.radius);
+            other.pos += push;
+        }
+    }
+}
+
 [[nodiscard]] std::optional<float> MaxContactDamage(const World &world) {
     std::optional<float> max_damage;
     for (auto &e: world.enemies) {
@@ -239,6 +261,7 @@ void Update(World &world, const float dt) {
     UpdateSpawn(world, dt);
     UpdatePlayer(world.player, dt);
     UpdateEnemies(world, dt);
+    UpdateSeparation(world, dt);
     UpdateContactDamage(world);
     UpdateShooting(world, dt);
     UpdateBullets(world, dt);

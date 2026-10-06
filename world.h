@@ -38,6 +38,8 @@ constexpr float kEnemySpawnIntervalMin = 0.5f;
 constexpr float kPlayerInvulnerabilityDuration = 0.6f;
 constexpr float kPlayerBlinkPhaseDuration = 0.2f;
 
+constexpr float kSeparationSpeedFactor = 5.f;
+
 enum class GameState { Playing, LevelUp, GameOver };
 
 enum class Upgrade { FireInterval, MoveSpeed, BulletSpeed, Magnet, MaxHealth, RestoreHealth, Count };
