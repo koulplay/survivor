@@ -117,7 +117,7 @@ void UpdateSeparation(World &world, const float dt) {
                 else direction = {-1.f, 0.f};
             }
             Vector2 push = direction * weight * other_def.speed * kSeparationSpeedFactor * dt;
-            Vector2ClampValue(push, 0.f,other_def.radius);
+            push = Vector2ClampValue(push, 0.f,other_def.radius);
             other.pos += push;
         }
     }
