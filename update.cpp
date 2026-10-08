@@ -68,7 +68,7 @@ namespace {
     std::vector<EnemyType> candidates;
     candidates.reserve(static_cast<size_t>(EnemyType::Count));
     for (size_t i = 0; i < static_cast<size_t>(EnemyType::Count); ++i) {
-        if (GetEnemyDef(static_cast<EnemyType>(i)).appear_time <= game_time) {
+        if (const float app_t = GetEnemyDef(static_cast<EnemyType>(i)).appear_time; app_t <= game_time && app_t >= 0) {
             candidates.push_back(static_cast<EnemyType>(i));
         }
     }
@@ -76,13 +76,16 @@ namespace {
     return candidates[GetRandomValue(0, candidates.size() - 1)];
 }
 
+void SpawnEnemy(World &world) {
+    const EnemyType enemy_type = RandomEnemyType(world.game_time);
+    world.enemies.emplace_back(RandomEdgePoint(world.player, GetEnemyDef(enemy_type).radius), enemy_type);
+}
+
 void UpdateSpawn(World &world, const float dt) {
     world.enemy_spawn_timer += dt;
     if (const float interval = EnemySpawnInterval(world.game_time); world.enemy_spawn_timer > interval) {
         world.enemy_spawn_timer -= interval;
-
-        const EnemyType enemy_type = RandomEnemyType(world.game_time);
-        world.enemies.emplace_back(RandomEdgePoint(world.player, GetEnemyDef(enemy_type).radius), enemy_type);
+        SpawnEnemy(world);
     }
 }
 
@@ -167,8 +170,22 @@ void UpdateShooting(World &world, const float dt) {
     return b.age >= kPlayerBulletMaxLifetime;
 }
 
+void OnSplitterDeath(World &world, std::vector<Enemy>& enemies, const Enemy& splitter) {
+    Vector2 direction_to_player = Vector2Normalize(world.player.pos - splitter.pos);
+
+    Vector2 direction_a = {-direction_to_player.y, direction_to_player.x};
+    Vector2 direction_b = {direction_to_player.y, -direction_to_player.x};
+    const auto& splitter_def = GetEnemyDef(EnemyType::Splitter);
+    const float split_offset = splitter_def.radius / 2;
+    Vector2 pos_twin_a = Vector2Add(splitter.pos, direction_a * split_offset);
+    Vector2 pos_twin_b = Vector2Add(splitter.pos, direction_b * split_offset);
+    enemies.emplace_back(pos_twin_a, EnemyType::Twin);
+    enemies.emplace_back(pos_twin_b, EnemyType::Twin);
+}
+
 // полёт, попадания, удаление
 void UpdateBullets(World &world, const float dt) {
+    std::vector<Enemy> enemies_to_spawn;    //спавнить специальных врагов при смерти других
     for (auto &b: world.bullets) {
         if (ShouldDieByLifetime(b)) {
             b.dead = true;
@@ -196,9 +213,14 @@ void UpdateBullets(World &world, const float dt) {
                 });
                 e.health -= world.player.bullet_damage;
                 if (e.health <= 0.f) {
+                    if (e_def.exp) {
+                        world.exps.push_back({e.pos, e_def.exp});
+                    }
+                    if (e.type == EnemyType::Splitter) {
+                        OnSplitterDeath(world, enemies_to_spawn, e);
+                    }
                     e.dead = true;
                     b.dead = true;
-                    world.exps.push_back({e.pos, e_def.exp});
                     break;
                 }
                 b.dead = true;
@@ -206,6 +228,7 @@ void UpdateBullets(World &world, const float dt) {
         }
         b.pos += b.vel * dt;
     }
+    world.enemies.insert(world.enemies.end(), enemies_to_spawn.begin(), enemies_to_spawn.end());
 }
 
 void UpdateExp(World &world, const float dt) {

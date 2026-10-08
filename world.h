@@ -44,7 +44,7 @@ enum class GameState { Playing, LevelUp, GameOver };
 
 enum class Upgrade { FireInterval, MoveSpeed, BulletSpeed, Magnet, MaxHealth, RestoreHealth, Count };
 
-enum class EnemyType { Light, Medium, Heavy, Count };
+enum class EnemyType { Light, Medium, Heavy, Splitter, Twin, Count };
 
 [[nodiscard]] Rectangle CardRect(int i);
 
@@ -98,9 +98,11 @@ struct EnemyDef {
 };
 
 constexpr EnemyDef kEnemyDefs[] = {
-    { .max_health = 5.f, .damage = 15.f, .radius = 5.0f, .speed = 150.f, .exp = 3.f, .appear_time = 30.f, .color = GREEN },
-    { .max_health = 10.f, .damage = 30.f, .radius = 10.0f, .speed = 50.f, .exp = 5.f, .appear_time = 0.f, .color = RED },
-    { .max_health = 20.f, .damage = 30.f, .radius = 25.0f, .speed = 20.f, .exp = 8.f, .appear_time = 60.f, .color = PURPLE }
+    { .max_health = 5.f,  .damage = 15.f, .radius = 5.f,  .speed = 150.f, .exp = 3.f, .appear_time = 30.f, .color = GREEN },       //Light
+    { .max_health = 10.f, .damage = 30.f, .radius = 10.f, .speed = 50.f,  .exp = 5.f, .appear_time = 0.f,  .color = RED },         //Medium
+    { .max_health = 20.f, .damage = 30.f, .radius = 25.f, .speed = 20.f,  .exp = 8.f, .appear_time = 60.f, .color = PURPLE },      //Heavy
+    { .max_health = 8.f,  .damage = 20.f, .radius = 10.f, .speed = 50.f,  .exp = 0.f, .appear_time = 30.f, .color = GRAY },        //Splitter
+    { .max_health = 3.f,  .damage = 30.f, .radius = 8.f,  .speed = 20.f,  .exp = 2.f, .appear_time = -1.f, .color = LIGHTGRAY }    //Twin
 };
 
 [[nodiscard]] const EnemyDef &GetEnemyDef(EnemyType type);
