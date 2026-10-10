@@ -36,20 +36,21 @@ endif()
 
 # --- логика игры: библиотека, её подключают игра и тесты ---
 add_library(survivor_core STATIC
-        world.h world.cpp
-        update.h update.cpp)
+        src/world.h src/world.cpp
+        src/update.h src/update.cpp)
 target_link_libraries(survivor_core PUBLIC raylib)   # PUBLIC: world.h включает raylib.h
+target_include_directories(survivor_core PUBLIC src)
 target_compile_options(survivor_core PRIVATE ${SURVIVOR_WARNINGS})
 
 # --- игра ---
 add_executable(survivor
-        main.cpp
-        draw.h draw.cpp)
+        src/main.cpp
+        src/draw.h src/draw.cpp)
 target_link_libraries(survivor PRIVATE survivor_core raylib)
 target_compile_options(survivor PRIVATE ${SURVIVOR_WARNINGS})
 
 # --- тесты ---
-add_executable(tests tests.cpp)
+add_executable(tests tests/tests.cpp)
 target_link_libraries(tests PRIVATE survivor_core Catch2::Catch2WithMain)
 target_compile_options(tests PRIVATE ${SURVIVOR_WARNINGS})
 
