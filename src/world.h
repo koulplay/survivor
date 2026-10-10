@@ -3,6 +3,7 @@
 #include <raylib.h>
 #include <vector>
 #include <array>
+#include <random>
 
 constexpr int kScreenWidth = 1280;
 constexpr int kScreenHeight = 720;
@@ -135,6 +136,12 @@ struct DamagePopup {
 };
 
 struct World {
+    World()
+        :seed(std::random_device{}()){}
+
+    World(const unsigned int seed)
+        :seed(seed){}
+
     Player player;
     std::vector<Enemy> enemies;
     std::vector<Bullet> bullets;
@@ -148,4 +155,7 @@ struct World {
     int level = 0;
     float enemy_spawn_timer = 0.f;
     float game_time = 0.f;
+
+    unsigned int seed;
+    std::mt19937 rng{seed};
 };

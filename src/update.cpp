@@ -12,16 +12,21 @@
 #include "world.h"
 
 namespace {
-[[nodiscard]] Vector2 RandomEdgePoint(const Player &player, const float margin) {
-    const auto x = static_cast<float>(GetRandomValue(static_cast<int>(player.pos.x) - kScreenWidth / 2,
-                                                     static_cast<int>(player.pos.x) + kScreenWidth / 2));
-    const auto y = static_cast<float>(GetRandomValue(static_cast<int>(player.pos.y) - kScreenHeight / 2,
-                                                     static_cast<int>(player.pos.y) + kScreenHeight / 2));
+[[nodiscard]] Vector2 RandomEdgePoint(World &world, const float margin) {
+    const Vector2 player_pos = world.player.pos;
+    std::uniform_int_distribution<> dist_x(static_cast<int>(player_pos.x) - kScreenWidth / 2,
+                                           static_cast<int>(player_pos.x) + kScreenWidth / 2);
+    std::uniform_int_distribution<> dist_y(static_cast<int>(player_pos.y) - kScreenHeight / 2,
+                                           static_cast<int>(player_pos.y) + kScreenHeight / 2);
+
+    const float x = static_cast<float>(dist_x(world.rng));
+    const float y = static_cast<float>(dist_y(world.rng));
+
     switch (GetRandomValue(0, 3)) {
-        case 0: return {x, player.pos.y - kScreenHeight / 2 - margin};
-        case 1: return {x, player.pos.y + kScreenHeight / 2 + margin};
-        case 2: return {player.pos.x - kScreenWidth / 2 - margin, y};
-        default: return {player.pos.x + kScreenWidth / 2 + margin, y};
+        case 0: return {x, player_pos.y - kScreenHeight / 2 - margin};
+        case 1: return {x, player_pos.y + kScreenHeight / 2 + margin};
+        case 2: return {player_pos.x - kScreenWidth / 2 - margin, y};
+        default: return {player_pos.x + kScreenWidth / 2 + margin, y};
     }
 }
 
@@ -64,7 +69,7 @@ namespace {
     return std::max(kEnemySpawnIntervalMin, kEnemySpawnIntervalStart - game_time * kEnemySpawnIntervalDecreasePerSec);
 }
 
-[[nodiscard]] EnemyType RandomEnemyType(const float game_time) {
+[[nodiscard]] EnemyType RandomEnemyType(World &world,const float game_time) {
     std::vector<EnemyType> candidates;
     candidates.reserve(static_cast<size_t>(EnemyType::Count));
     for (size_t i = 0; i < static_cast<size_t>(EnemyType::Count); ++i) {
@@ -73,12 +78,12 @@ namespace {
         }
     }
     assert(!candidates.empty());
-    return candidates[GetRandomValue(0, candidates.size() - 1)];
+    return candidates[std::uniform_int_distribution<>(0,candidates.size() - 1)(world.rng)];
 }
 
 void SpawnEnemy(World &world) {
-    const EnemyType enemy_type = RandomEnemyType(world.game_time);
-    world.enemies.emplace_back(RandomEdgePoint(world.player, GetEnemyDef(enemy_type).radius), enemy_type);
+    const EnemyType enemy_type = RandomEnemyType(world, world.game_time);
+    world.enemies.emplace_back(RandomEdgePoint(world, GetEnemyDef(enemy_type).radius), enemy_type);
 }
 
 void UpdateSpawn(World &world, const float dt) {
@@ -254,10 +259,9 @@ void UpdateDamagePopups(World &world, const float dt) {
 }
 
 void FillLevelUpMenu(World &world) {
-    static std::mt19937 rng{std::random_device{}()};
     std::array<Upgrade, static_cast<int>(Upgrade::Count)> all{};
     for (int i = 0; i < static_cast<int>(all.size()); ++i) all[i] = static_cast<Upgrade>(i);
-    std::shuffle(all.begin(), all.end(), rng);
+    std::shuffle(all.begin(), all.end(), world.rng);
     for (int i = 0; i < 3; ++i) world.level_up_menu.options[i] = all[i];
     world.level_up_menu.selected = 0;
 }
