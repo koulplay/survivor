@@ -1,5 +1,7 @@
 #include "update.h"
 
+#include <raylib.h>
+#include <raymath.h>
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -7,8 +9,6 @@
 #include <random>
 #include <string>
 
-#include "raylib.h"
-#include "raymath.h"
 #include "world.h"
 
 namespace {
@@ -253,24 +253,23 @@ void UpdateDamagePopups(World &world, const float dt) {
     }
 }
 
+void UpdateLevelUpUpgradeOptions(World &world) {
+    static std::mt19937 rng{std::random_device{}()};
+    std::array<Upgrade, static_cast<int>(Upgrade::Count)> all{};
+    for (int i = 0; i < static_cast<int>(all.size()); ++i) all[i] = static_cast<Upgrade>(i);
+    std::shuffle(all.begin(), all.end(), rng);
+    for (int i = 0; i < 3; ++i) world.level_up_menu.options[i] = all[i];
+    world.level_up_menu.selected = 0;
+}
+
 void UpdateGameState(World &world) {
     if (world.player.health <= 0.f && world.game_state != GameState::GameOver) {
         world.player.health = 0.f;
         world.game_state = GameState::GameOver;
     }
     else if (world.current_exp >= world.exp_to_level && world.game_state != GameState::LevelUp) {
-        static std::mt19937 rng{std::random_device{}()};
-        std::array<Upgrade, static_cast<int>(Upgrade::Count)> all{};
-        for (int i = 0; i < static_cast<int>(all.size()); ++i) all[i] = static_cast<Upgrade>(i);
-        std::shuffle(all.begin(), all.end(), rng);
-        for (int i = 0; i < 3; ++i) world.level_up_menu.options[i] = all[i];
-        world.level_up_menu.selected = 0;
-
-        ++world.level;
-        const float leftover_exp = world.current_exp - world.exp_to_level;
-        world.current_exp = leftover_exp;
-        world.exp_to_level *= kExpToLevelMultiplier;
-        world.game_state = GameState::LevelUp;
+        UpdateLevelUpUpgradeOptions(world);
+        UpdateLevelUpExperience(world);
     }
     else {
         world.game_state = GameState::Playing;
@@ -336,4 +335,12 @@ bool UpdateLevelUp(World &world) {
         }
     }
     return confirm;
+}
+
+void UpdateLevelUpExperience(World &world) {
+    ++world.level;
+    const float leftover_exp = world.current_exp - world.exp_to_level;
+    world.current_exp = leftover_exp;
+    world.exp_to_level *= kExpToLevelMultiplier;
+    world.game_state = GameState::LevelUp;
 }
