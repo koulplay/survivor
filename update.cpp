@@ -253,7 +253,7 @@ void UpdateDamagePopups(World &world, const float dt) {
     }
 }
 
-void UpdateLevelUpUpgradeOptions(World &world) {
+void FillLevelUpMenu(World &world) {
     static std::mt19937 rng{std::random_device{}()};
     std::array<Upgrade, static_cast<int>(Upgrade::Count)> all{};
     for (int i = 0; i < static_cast<int>(all.size()); ++i) all[i] = static_cast<Upgrade>(i);
@@ -267,9 +267,8 @@ void UpdateGameState(World &world) {
         world.player.health = 0.f;
         world.game_state = GameState::GameOver;
     }
-    else if (world.current_exp >= world.exp_to_level && world.game_state != GameState::LevelUp) {
-        UpdateLevelUpUpgradeOptions(world);
-        UpdateLevelUpExperience(world);
+    else if (TryLevelUp(world)) {
+        FillLevelUpMenu(world);
     }
     else {
         world.game_state = GameState::Playing;
@@ -337,10 +336,14 @@ bool UpdateLevelUp(World &world) {
     return confirm;
 }
 
-void UpdateLevelUpExperience(World &world) {
-    ++world.level;
-    const float leftover_exp = world.current_exp - world.exp_to_level;
-    world.current_exp = leftover_exp;
-    world.exp_to_level *= kExpToLevelMultiplier;
-    world.game_state = GameState::LevelUp;
+[[nodiscard]] bool TryLevelUp(World &world) {
+    if (world.current_exp >= world.exp_to_level && world.game_state != GameState::LevelUp) {
+        ++world.level;
+        const float leftover_exp = world.current_exp - world.exp_to_level;
+        world.current_exp = leftover_exp;
+        world.exp_to_level *= kExpToLevelMultiplier;
+        world.game_state = GameState::LevelUp;
+        return true;
+    }
+    return false;
 }
