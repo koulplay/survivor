@@ -126,6 +126,9 @@ void Draw(const World &world) {
              WHITE);
     if (world.game_state == GameState::GameOver) {
         DrawText("GAME OVER", (kScreenWidth - MeasureText("GAME OVER", 50)) / 2, kScreenHeight / 2, 50, WHITE);
+
+        const std::string seed = std::format("Seed: {:d}", world.seed);
+        DrawText(seed.c_str(), (kScreenWidth - MeasureText(seed.c_str(), 30)) / 2, kScreenHeight / 2 + 60, 30, WHITE);
     }
 
     DrawFPS(10, 10);
