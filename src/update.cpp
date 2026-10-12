@@ -22,7 +22,8 @@ namespace {
     const float x = static_cast<float>(dist_x(world.rng));
     const float y = static_cast<float>(dist_y(world.rng));
 
-    switch (GetRandomValue(0, 3)) {
+    // Выбор одной из сторон экрана
+    switch (std::uniform_int_distribution<>(0,3)(world.rng)) {
         case 0: return {x, player_pos.y - kScreenHeight / 2 - margin};
         case 1: return {x, player_pos.y + kScreenHeight / 2 + margin};
         case 2: return {player_pos.x - kScreenWidth / 2 - margin, y};
@@ -68,11 +69,11 @@ namespace {
     return std::max(kEnemySpawnIntervalMin, kEnemySpawnIntervalStart - game_time * kEnemySpawnIntervalDecreasePerSec);
 }
 
-[[nodiscard]] EnemyType RandomEnemyType(World &world,const float game_time) {
+[[nodiscard]] EnemyType RandomEnemyType(World &world) {
     std::vector<EnemyType> candidates;
     candidates.reserve(static_cast<size_t>(EnemyType::Count));
     for (size_t i = 0; i < static_cast<size_t>(EnemyType::Count); ++i) {
-        if (const float app_t = GetEnemyDef(static_cast<EnemyType>(i)).appear_time; app_t <= game_time && app_t >= 0) {
+        if (const float app_t = GetEnemyDef(static_cast<EnemyType>(i)).appear_time; app_t <= world.game_time && app_t >= 0) {
             candidates.push_back(static_cast<EnemyType>(i));
         }
     }
@@ -81,7 +82,7 @@ namespace {
 }
 
 void SpawnEnemy(World &world) {
-    const EnemyType enemy_type = RandomEnemyType(world, world.game_time);
+    const EnemyType enemy_type = RandomEnemyType(world);
     world.enemies.emplace_back(RandomEdgePoint(world, GetEnemyDef(enemy_type).radius), enemy_type);
 }
 

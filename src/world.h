@@ -155,7 +155,7 @@ struct World {
     World()
         :seed(std::random_device{}()){}
 
-    World(const unsigned int seed)
+    explicit World(const unsigned int seed)
         :seed(seed){}
 
     Player player;
