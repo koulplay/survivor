@@ -3,6 +3,7 @@
 #include <raylib.h>
 #include <vector>
 #include <array>
+#include <optional>
 #include <random>
 
 constexpr int kScreenWidth = 1280;
@@ -48,6 +49,21 @@ enum class Upgrade { FireInterval, MoveSpeed, BulletSpeed, Magnet, MaxHealth, Re
 enum class EnemyType { Light, Medium, Heavy, Splitter, Twin, Count };
 
 [[nodiscard]] Rectangle CardRect(int i);
+
+struct Input {
+    bool player_move_up = false;
+    bool player_move_left = false;
+    bool player_move_down = false;
+    bool player_move_right = false;
+    bool restart = false;
+    bool card_left = false;
+    bool card_right = false;
+    bool card_choose = false;
+    bool card_choose_mouse = false;
+    std::optional<int> picked_card;
+    Vector2 mouse_pos = Vector2{0.f, 0.f};
+    Vector2 mouse_delta = Vector2{0.f, 0.f};
+};
 
 struct LevelUpMenu {
     std::array<Upgrade, 3> options{};

@@ -30,19 +30,18 @@ namespace {
     }
 }
 
-[[nodiscard]] Vector2 ReadMoveInput() {
+[[nodiscard]] Vector2 MovePlayer(const Input& input) {
     Vector2 move_direction{0.0f, 0.0f};
-
-    if (IsKeyDown(KEY_UP) || IsKeyDown(KEY_W)) {
+    if (input.player_move_up) {
         move_direction += {0.0f, -1.f};
     }
-    if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) {
+    if (input.player_move_left) {
         move_direction += {-1.f, 0.0f};
     }
-    if (IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_S)) {
+    if (input.player_move_down) {
         move_direction += {0.0f, 1.f};
     }
-    if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) {
+    if (input.player_move_right) {
         move_direction += {1.f, 0.0f};
     }
     return Vector2Normalize(move_direction);
@@ -94,11 +93,11 @@ void UpdateSpawn(World &world, const float dt) {
     }
 }
 
-void UpdatePlayer(Player &player, const float dt) {
+void UpdatePlayer(Player &player, const Input& input, const float dt) {
     if (player.invulnerability_timer > 0.f) {
         player.invulnerability_timer = std::max(0.f, player.invulnerability_timer - dt);
     }
-    player.pos += ReadMoveInput() * (player.speed * dt);
+    player.pos += MovePlayer(input) * (player.speed * dt);
 }
 
 void UpdateEnemies(World &world, const float dt) {
@@ -281,10 +280,10 @@ void UpdateGameState(World &world) {
 }
 
 
-void Update(World &world, const float dt) {
+void Update(World &world, const Input& input, const float dt) {
     world.game_time += dt;
     UpdateSpawn(world, dt);
-    UpdatePlayer(world.player, dt);
+    UpdatePlayer(world.player, input, dt);
     UpdateEnemies(world, dt);
     UpdateSeparation(world, dt);
     UpdateContactDamage(world);
@@ -321,20 +320,21 @@ void ApplyUpgrade(Player &p, Upgrade u) {
     }
 }
 
-bool UpdateLevelUp(World &world) {
+bool UpdateLevelUp(World &world, const Input &input) {
     auto &m = world.level_up_menu;
-    if (IsKeyPressed(KEY_RIGHT)) m.selected = (m.selected + 1) % 3;
-    if (IsKeyPressed(KEY_LEFT)) m.selected = (m.selected + 3 - 1) % 3;
-    const bool mouse_moved = Vector2Length(GetMouseDelta()) > 0.0f;
-    bool confirm = IsKeyPressed(KEY_ENTER);
+    if (input.card_right) m.selected = (m.selected + 1) % 3;
+    if (input.card_left) m.selected = (m.selected + 3 - 1) % 3;
+    const bool mouse_moved = Vector2Length(input.mouse_delta) > 0.0f;
+    bool confirm = input.card_choose;
+    if (input.picked_card) {
+        assert(input.picked_card.value() < 3);
+        m.selected = input.picked_card.value();
+        confirm = true;
+    }
     for (int i = 0; i < 3; ++i) {
-        if (IsKeyPressed(KEY_ONE + i)) {
-            m.selected = i;
-            confirm = true;
-        }
-        if (CheckCollisionPointRec(GetMousePosition(), CardRect(i))) {
+        if (CheckCollisionPointRec(input.mouse_pos, CardRect(i))) {
             if (mouse_moved) m.selected = i;
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) confirm = true;
+            if (input.card_choose_mouse) confirm = true;
         }
     }
     return confirm;
