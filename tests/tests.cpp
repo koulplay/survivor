@@ -101,7 +101,7 @@ TEST_CASE("ApplyUpgrade: RestoreHealth larger than missing health -> health capp
     ApplyUpgrade(player, Upgrade::RestoreHealth);
 
     CHECK(player.health > health);
-    CHECK(player.health <= player.max_health);
+    CHECK(player.health == player.max_health);
 }
 
 TEST_CASE("ApplyUpgrade: RestoreHealth smaller than missing health -> health grows by restore amount", "[upgrade]") {
@@ -113,8 +113,7 @@ TEST_CASE("ApplyUpgrade: RestoreHealth smaller than missing health -> health gro
 
     ApplyUpgrade(player, Upgrade::RestoreHealth);
 
-    CHECK(player.health > health);
-    CHECK(player.health <= player.max_health);
+    CHECK(player.health == health * kUpgradeRestoreHealth);
 }
 
 TEST_CASE("UpdateBullets: hit drops enemy health to exactly 0 -> enemy dies", "[enemy]") {
