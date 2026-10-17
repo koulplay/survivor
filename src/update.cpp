@@ -33,16 +33,16 @@ namespace {
 
 [[nodiscard]] Vector2 MovePlayer(const Input& input) {
     Vector2 move_direction{0.0f, 0.0f};
-    if (input.player_move_up) {
+    if (input.down.player_move_up) {
         move_direction += {0.0f, -1.f};
     }
-    if (input.player_move_left) {
+    if (input.down.player_move_left) {
         move_direction += {-1.f, 0.0f};
     }
-    if (input.player_move_down) {
+    if (input.down.player_move_down) {
         move_direction += {0.0f, 1.f};
     }
-    if (input.player_move_right) {
+    if (input.down.player_move_right) {
         move_direction += {1.f, 0.0f};
     }
     return Vector2Normalize(move_direction);
@@ -88,7 +88,7 @@ void SpawnEnemy(World &world) {
 
 void UpdateSpawn(World &world, const float dt) {
     world.enemy_spawn_timer += dt;
-    if (const float interval = EnemySpawnInterval(world.game_time); world.enemy_spawn_timer > interval) {
+    if (const float interval = EnemySpawnInterval(static_cast<float>(world.game_time)); world.enemy_spawn_timer > interval) {
         world.enemy_spawn_timer -= interval;
         SpawnEnemy(world);
     }
@@ -280,17 +280,17 @@ void UpdateBullets(World &world, const float dt) {
     world.enemies.insert(world.enemies.end(), enemies_to_spawn.begin(), enemies_to_spawn.end());
 }
 
-void Update(World &world, const Input& input, const float dt) {
-    world.game_time += dt;
-    UpdateSpawn(world, dt);
-    UpdatePlayer(world.player, input, dt);
-    UpdateEnemies(world, dt);
-    UpdateSeparation(world, dt);
+void Update(World &world, const Input& input) {
+    world.game_time += kTick;
+    UpdateSpawn(world, kTick);
+    UpdatePlayer(world.player, input, kTick);
+    UpdateEnemies(world, kTick);
+    UpdateSeparation(world, kTick);
     UpdateContactDamage(world);
-    UpdateShooting(world, dt);
-    UpdateBullets(world, dt);
-    UpdateExp(world, dt);
-    UpdateDamagePopups(world, dt);
+    UpdateShooting(world, kTick);
+    UpdateBullets(world, kTick);
+    UpdateExp(world, kTick);
+    UpdateDamagePopups(world, kTick);
 
     UpdateGameState(world);
 
@@ -322,19 +322,20 @@ void ApplyUpgrade(Player &p, Upgrade u) {
 
 bool UpdateLevelUp(World &world, const Input &input) {
     auto &m = world.level_up_menu;
-    if (input.card_right) m.selected = (m.selected + 1) % 3;
-    if (input.card_left) m.selected = (m.selected + 3 - 1) % 3;
-    const bool mouse_moved = Vector2Length(input.mouse_delta) > 0.0f;
-    bool confirm = input.card_choose;
-    if (input.picked_card) {
-        assert(input.picked_card.value() < 3);
-        m.selected = input.picked_card.value();
+    auto inp = input.pressed;
+    if (inp.card_right) m.selected = (m.selected + 1) % 3;
+    if (inp.card_left) m.selected = (m.selected + 3 - 1) % 3;
+    const bool mouse_moved = Vector2Length(inp.mouse_delta) > 0.0f;
+    bool confirm = inp.card_choose;
+    if (inp.picked_card) {
+        assert(inp.picked_card.value() < 3);
+        m.selected = inp.picked_card.value();
         confirm = true;
     }
     for (int i = 0; i < 3; ++i) {
-        if (CheckCollisionPointRec(input.mouse_pos, CardRect(i))) {
+        if (CheckCollisionPointRec(inp.mouse_pos, CardRect(i))) {
             if (mouse_moved) m.selected = i;
-            if (input.card_choose_mouse) confirm = true;
+            if (inp.card_choose_mouse) confirm = true;
         }
     }
     return confirm;

@@ -9,7 +9,10 @@
 constexpr int kScreenWidth = 1280;
 constexpr int kScreenHeight = 720;
 
-constexpr float kExpRadius = 2.0f;
+constexpr float kTick = 1.f / 60.f;
+constexpr float kMaxFrame = 0.1f;
+
+constexpr float kExpRadius = 2.f;
 constexpr float kExpSpeed = 300.f;
 constexpr float kExpToLevelMultiplier = 1.2f;
 
@@ -51,18 +54,23 @@ enum class EnemyType { Light, Medium, Heavy, Splitter, Twin, Count };
 [[nodiscard]] Rectangle CardRect(int i);
 
 struct Input {
-    bool player_move_up = false;
-    bool player_move_left = false;
-    bool player_move_down = false;
-    bool player_move_right = false;
-    bool restart = false;
-    bool card_left = false;
-    bool card_right = false;
-    bool card_choose = false;
-    bool card_choose_mouse = false;
-    std::optional<int> picked_card;
-    Vector2 mouse_pos = Vector2{0.f, 0.f};
-    Vector2 mouse_delta = Vector2{0.f, 0.f};
+    struct Down {
+        bool player_move_up = false;
+        bool player_move_left = false;
+        bool player_move_down = false;
+        bool player_move_right = false;
+    } down;
+    struct Pressed {
+        bool restart = false;
+        bool card_left = false;
+        bool card_right = false;
+        bool card_choose = false;
+        bool card_choose_mouse = false;
+        std::optional<int> picked_card;
+        Vector2 mouse_pos = Vector2{0.f, 0.f};
+        Vector2 mouse_delta = Vector2{0.f, 0.f};
+    } pressed;
+
 };
 
 struct LevelUpMenu {
@@ -170,7 +178,7 @@ struct World {
     float exp_to_level = 1.f;
     int level = 0;
     float enemy_spawn_timer = 0.f;
-    float game_time = 0.f;
+    double game_time = 0.f;
 
     unsigned int seed;
     std::mt19937 rng{seed};

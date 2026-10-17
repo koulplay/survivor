@@ -25,7 +25,7 @@ namespace {
     return "?";
 }
 
-[[nodiscard]] std::string GameTimeToText(const float time) {
+[[nodiscard]] std::string GameTimeToText(const double time) {
     const int total_seconds = static_cast<int>(time);
     const int minutes = total_seconds / 60;
     const int seconds = total_seconds % 60;
