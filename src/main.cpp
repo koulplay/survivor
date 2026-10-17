@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <raymath.h>
 
 #include "world.h"
 #include "update.h"
@@ -17,17 +18,17 @@ void ReadInput(Input &input) {
     if (IsKeyPressed(KEY_ONE)) input.pressed.picked_card = 0;
     if (IsKeyPressed(KEY_TWO)) input.pressed.picked_card = 1;
     if (IsKeyPressed(KEY_THREE)) input.pressed.picked_card = 2;
-    input.pressed.mouse_pos = GetMousePosition();
-    input.pressed.mouse_delta = GetMouseDelta();
+    input.down.mouse_pos = GetMousePosition();
+    input.pressed.mouse_delta += GetMouseDelta();
 }
 
 int main() {
     InitWindow(kScreenWidth, kScreenHeight, "Survivor");
-    SetTargetFPS(144);
+    SetTargetFPS(60);
 
     World world;
     Input input;
-    double accumulator = 0.f;
+    float accumulator = 0.f;
 
     while (!WindowShouldClose()) {
         ReadInput(input);
