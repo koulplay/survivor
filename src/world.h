@@ -59,6 +59,7 @@ struct Input {
         bool player_move_left = false;
         bool player_move_down = false;
         bool player_move_right = false;
+        Vector2 mouse_pos = Vector2{0.f, 0.f};
     } down;
     struct Pressed {
         bool restart = false;
@@ -67,7 +68,6 @@ struct Input {
         bool card_choose = false;
         bool card_choose_mouse = false;
         std::optional<int> picked_card;
-        Vector2 mouse_pos = Vector2{0.f, 0.f};
         Vector2 mouse_delta = Vector2{0.f, 0.f};
     } pressed;
 
