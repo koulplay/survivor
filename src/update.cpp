@@ -333,7 +333,7 @@ bool UpdateLevelUp(World &world, const Input &input) {
         confirm = true;
     }
     for (int i = 0; i < 3; ++i) {
-        if (CheckCollisionPointRec(inp.mouse_pos, CardRect(i))) {
+        if (CheckCollisionPointRec(input.down.mouse_pos, CardRect(i))) {
             if (mouse_moved) m.selected = i;
             if (inp.card_choose_mouse) confirm = true;
         }
