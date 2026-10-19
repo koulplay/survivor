@@ -4,7 +4,7 @@
 
 **Где в коде:** `main.cpp` — цикл с накопителем и `ReadInput`; `world.h` — `kTick`, `kMaxFrame`, `Input::Down`, `Input::Pressed`; `update.cpp` — `Update(world, input)`, ровно один тик.
 
-**Карточки по уроку:** 1, 4, 7, 10, 13, 16, 19 в `docs/cards.md`.
+**Карточки по уроку:** 1, 4, 7, 10, 13, 16, 19, 32, 33 в `docs/cards.md`.
 
 ---
 
