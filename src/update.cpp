@@ -352,3 +352,22 @@ bool UpdateLevelUp(World &world, const Input &input) {
     }
     return false;
 }
+
+void UpdateByState(World &world, const Input &input) {
+    switch (world.game_state) {
+        case GameState::Playing:
+            Update(world, input);
+            break;
+        case GameState::LevelUp:
+            if (UpdateLevelUp(world, input)) {
+                ApplyUpgrade(world.player, world.level_up_menu.options[world.level_up_menu.selected]);
+                world.game_state = GameState::Playing;
+            }
+            break;
+        case GameState::GameOver:
+            if (input.pressed.restart) {
+                world = World{};
+            }
+            break;
+    }
+}

@@ -34,22 +34,8 @@ int main() {
         ReadInput(input);
         accumulator += std::min(GetFrameTime(), kMaxFrame);
         while (accumulator >= kTick) {
-            switch (world.game_state) {
-                case GameState::Playing:
-                    Update(world, input);
-                    break;
-                case GameState::LevelUp:
-                    if (UpdateLevelUp(world, input)) {
-                        ApplyUpgrade(world.player, world.level_up_menu.options[world.level_up_menu.selected]);
-                        world.game_state = GameState::Playing;
-                    }
-                    break;
-                case GameState::GameOver:
-                    if (input.pressed.restart) {
-                        world = World{};
-                    }
-                    break;
-            }
+            UpdateByState(world, input);
+            if (world.game_state == GameState::GameOver && input.pressed.restart) world = World{};
             input.pressed = Input::Pressed{};
             accumulator -= kTick;
         }

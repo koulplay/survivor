@@ -8,3 +8,4 @@ void Update(World &world, const Input& input);
 bool UpdateLevelUp(World &world, const Input& input);
 void ApplyUpgrade(Player &p, Upgrade u);
 [[nodiscard]]  bool TryLevelUp(World &world);
+void UpdateByState(World &world, const Input &input);
