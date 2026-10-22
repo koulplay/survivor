@@ -365,9 +365,6 @@ void UpdateByState(World &world, const Input &input) {
             }
             break;
         case GameState::GameOver:
-            if (input.pressed.restart) {
-                world = World{};
-            }
             break;
     }
 }
