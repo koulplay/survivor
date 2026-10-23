@@ -226,8 +226,8 @@ void OnSplitterDeath(World &world, std::vector<Enemy>& enemies, const Enemy& spl
     Vector2 direction_b = {direction_to_player.y, -direction_to_player.x};
     const auto& splitter_def = GetEnemyDef(EnemyType::Splitter);
     const float split_offset = splitter_def.radius / 2;
-    Vector2 pos_twin_a = Vector2Add(splitter.pos, direction_a * split_offset);
-    Vector2 pos_twin_b = Vector2Add(splitter.pos, direction_b * split_offset);
+    Vector2 pos_twin_a = splitter.pos + direction_a * split_offset;
+    Vector2 pos_twin_b = splitter.pos + direction_b * split_offset;
     enemies.emplace_back(pos_twin_a, EnemyType::Twin);
     enemies.emplace_back(pos_twin_b, EnemyType::Twin);
 }
