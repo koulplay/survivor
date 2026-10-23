@@ -159,19 +159,6 @@ void UpdateContactDamage(World &world) {
     return b.age >= kPlayerBulletMaxLifetime;
 }
 
-void OnSplitterDeath(World &world, std::vector<Enemy>& enemies, const Enemy& splitter) {
-    Vector2 direction_to_player = Vector2Normalize(world.player.pos - splitter.pos);
-
-    Vector2 direction_a = {-direction_to_player.y, direction_to_player.x};
-    Vector2 direction_b = {direction_to_player.y, -direction_to_player.x};
-    const auto& splitter_def = GetEnemyDef(EnemyType::Splitter);
-    const float split_offset = splitter_def.radius / 2;
-    Vector2 pos_twin_a = Vector2Add(splitter.pos, direction_a * split_offset);
-    Vector2 pos_twin_b = Vector2Add(splitter.pos, direction_b * split_offset);
-    enemies.emplace_back(pos_twin_a, EnemyType::Twin);
-    enemies.emplace_back(pos_twin_b, EnemyType::Twin);
-}
-
 void UpdateExp(World &world, const float dt) {
     for (auto &exp: world.exps) {
         if (CheckCollisionCircles(world.player.pos, world.player.magnet_radius, exp.pos, kExpRadius)) {
@@ -230,6 +217,19 @@ void UpdateShooting(World &world, const float dt) {
 
     p.shot_timer -= p.fire_interval;
     world.bullets.push_back({p.pos, Vector2Normalize(*target - p.pos) * p.bullet_speed});
+}
+
+void OnSplitterDeath(World &world, std::vector<Enemy>& enemies, const Enemy& splitter) {
+    Vector2 direction_to_player = Vector2Normalize(world.player.pos - splitter.pos);
+
+    Vector2 direction_a = {-direction_to_player.y, direction_to_player.x};
+    Vector2 direction_b = {direction_to_player.y, -direction_to_player.x};
+    const auto& splitter_def = GetEnemyDef(EnemyType::Splitter);
+    const float split_offset = splitter_def.radius / 2;
+    Vector2 pos_twin_a = Vector2Add(splitter.pos, direction_a * split_offset);
+    Vector2 pos_twin_b = Vector2Add(splitter.pos, direction_b * split_offset);
+    enemies.emplace_back(pos_twin_a, EnemyType::Twin);
+    enemies.emplace_back(pos_twin_b, EnemyType::Twin);
 }
 
 // полёт, попадания, удаление
