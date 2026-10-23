@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <bit>
+#include <raymath.h>
 
 struct Fnv1a {
     std::uint64_t value = 14695981039346656037ull; // offset basis (RFC 9923)
@@ -265,4 +266,90 @@ TEST_CASE("UpdateBullets: hit drops enemy health below 0 -> enemy dies", "[enemy
     UpdateBullets(world, 2.f);
 
     CHECK(enemy.dead);
+}
+
+TEST_CASE("UpdateBullets: hit drops splitter hp above 0 -> splitter alive and no twins spawn", "[enemy]") {
+    World world;
+    Enemy &enemy = world.enemies.emplace_back(world.player.pos, EnemyType::Splitter);
+    world.bullets.emplace_back(world.player.pos, Vector2{});
+    world.player.bullet_damage = 5.f;
+    enemy.health = 10.f;
+
+    UpdateBullets(world, 2.f);
+
+    CHECK_FALSE(enemy.dead);
+    CHECK(world.enemies.size() == 1);
+}
+
+TEST_CASE("UpdateBullets: hit kills splitter -> splitter dead and twins spawn", "[enemy]") {
+    World world;
+    Enemy &enemy = world.enemies.emplace_back(world.player.pos, EnemyType::Splitter);
+    world.bullets.emplace_back(world.player.pos, Vector2{});
+    world.player.bullet_damage = 5.f;
+    enemy.health = 1.f;
+
+    UpdateBullets(world, 2.f);
+
+    CHECK(enemy.dead);
+    CHECK(world.enemies.size() == 3);
+}
+
+TEST_CASE("UpdateBullets: splitter dead -> no exp spawn", "[enemy]") {
+    World world;
+    Enemy &enemy = world.enemies.emplace_back(world.player.pos, EnemyType::Splitter);
+    world.bullets.emplace_back(world.player.pos, Vector2{});
+    world.player.bullet_damage = 5.f;
+    enemy.health = 1.f;
+
+    UpdateBullets(world, 2.f);
+
+    CHECK(world.exps.size() == 0);
+}
+
+TEST_CASE("UpdateBullets: hit kills splitter -> twins spawn perpendicular player", "[enemy]") {
+    World world;
+    world.player.pos = {0.f, 0.f};
+    Enemy &enemy = world.enemies.emplace_back(Vector2{300.f, 400.f}, EnemyType::Splitter);
+    world.bullets.emplace_back(Vector2{300.f, 400.f}, Vector2{});
+    enemy.health = 1.f;
+
+    UpdateBullets(world, 2.f);
+
+    std::vector<Vector2> twins;
+    for (const Enemy &e : world.enemies) {
+        if (e.type == EnemyType::Twin) twins.push_back(e.pos);
+    }
+    REQUIRE(twins.size() == 2);
+    const Vector2 a = twins[0];
+    const Vector2 b = twins[1];
+    auto near = [](Vector2 p, Vector2 q) { return Vector2Distance(p, q) < 0.01f; };
+    CAPTURE(a.x, a.y, b.x, b.y);
+    CHECK(((near(a, {304.f, 397.f}) && near(b, {296.f, 403.f})) ||
+           (near(a, {296.f, 403.f}) && near(b, {304.f, 397.f}))));
+}
+
+TEST_CASE("UpdateBullets: hit kills splitter with multiple bullets -> only two twins spawned", "[enemy]") {
+    World world;
+    Vector2 enemy_pos = {740.f, 360.f};
+    Enemy &enemy = world.enemies.emplace_back(enemy_pos, EnemyType::Splitter);
+    world.bullets.emplace_back(enemy_pos, Vector2{});
+    world.bullets.emplace_back(enemy_pos, Vector2{});
+    world.bullets.emplace_back(enemy_pos, Vector2{});
+    enemy.health = 1.f;
+
+    UpdateBullets(world, 2.f);
+
+    CHECK(world.enemies.size() == 3);
+}
+
+TEST_CASE("OnSplitterDeath: splitter dead -> vector enemies_to_spawn has 2 twins", "[enemy]") {
+    World world;
+    Enemy &enemy = world.enemies.emplace_back(world.player.pos, EnemyType::Splitter);
+    std::vector<Enemy> enemies_to_spawn;
+
+    OnSplitterDeath(world, enemies_to_spawn, enemy);
+
+    REQUIRE(enemies_to_spawn.size() == 2);
+    CHECK(enemies_to_spawn[0].type == EnemyType::Twin);
+    CHECK(enemies_to_spawn[1].type == EnemyType::Twin);
 }
