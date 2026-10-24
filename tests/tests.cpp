@@ -353,3 +353,17 @@ TEST_CASE("OnSplitterDeath: splitter dead -> vector enemies_to_spawn has 2 twins
     CHECK(enemies_to_spawn[0].type == EnemyType::Twin);
     CHECK(enemies_to_spawn[1].type == EnemyType::Twin);
 }
+
+TEST_CASE("SpawnRocks: new game = 0 ticks -> tick drops on new game", "[enemy]") {
+    Game g;
+
+    for (size_t i = 0; i < 6; i++) {
+        SpawnRocks(g);
+    }
+    g = Game(g.seed);
+    for (size_t i = 0; i < 15; i++) {
+        SpawnRocks(g);
+    }
+
+    REQUIRE(g.rocks.size() == 1);
+}

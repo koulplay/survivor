@@ -24,7 +24,7 @@
 
 ---
 
-## B. Страховка: тесты, повторяемость
+## B. Страховка: тесты, повторяемость — пройден
 
 **Зачем игре.** Дальше каждый этап перестраивает код: оружие, данные, структуры для тысяч врагов. Без тестов каждая перестройка — ручная проверка всего подряд. А повторяемость партии при том же зерне и том же вводе нужна реплеям, воспроизведению багов и балансу по симуляциям (этап J).
 
@@ -56,7 +56,7 @@
 
 **Самостоятельная задача B.** Тесты на врага, который делится (задача A). Какие края проверить — решаешь сам. Решена 24.10.2026.
 
-**Ревью и собеседование B.** Темы: тесты и их пороги, `<random>` и зерно, фиксированный шаг, ввод, повторяемость.
+**Ревью и собеседование B.** Темы: тесты и их пороги, `<random>` и зерно, фиксированный шаг, ввод, повторяемость. Пройдено 24.10.2026, итоги — `PLAN.md`, «Сейчас».
 
 **Читать:** Glenn Fiedler, «Fix Your Timestep!» — https://gafferongames.com/post/fix_your_timestep/ ; «Floating Point Determinism» — https://gafferongames.com/post/floating_point_determinism/ ; Robert Nystrom, «Game Programming Patterns», глава «Game Loop» — https://gameprogrammingpatterns.com/game-loop.html ; RFC 9923 (FNV) — https://www.rfc-editor.org/rfc/rfc9923.html ; cppreference, `std::bit_cast` — https://en.cppreference.com/w/cpp/numeric/bit_cast ; Catch2 и CMake — https://github.com/catchorg/Catch2/blob/devel/docs/cmake-integration.md ; P2059R0 — https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2059r0.pdf
 
