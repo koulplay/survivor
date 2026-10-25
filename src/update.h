@@ -5,6 +5,7 @@
 void UpdateBullets(World &world, const float dt);
 void UpdateAura(World &world, const float dt);
 void OnSplitterDeath(World &world, const Enemy& splitter);
+bool IsAuraReady(World &world);
 void UpdatePlayerDamage(World &world);
 void Update(World &world, const Input& input);
 bool UpdateLevelUp(World &world, const Input& input);

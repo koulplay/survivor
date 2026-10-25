@@ -202,14 +202,6 @@ void UpdateGameState(World &world) {
     }
 }
 
-bool IsAuraReady(World &world) {
-    Player &p = world.player;
-    if (p.aura_shot_timer < p.aura_fire_interval) return false;
-
-    p.aura_shot_timer -= p.aura_fire_interval;
-    return true;
-}
-
 void CreateDamagePopupMessage(World &world, const Vector2 pos, const Vector2 vel, const float damage, EnemyType e_type) {
     world.damage_popups.push_back({
         .pos = pos,
@@ -268,6 +260,14 @@ void UpdateBullets(World &world, const float dt) {
 void UpdateAura(World &world, const float dt) {
     Player &p = world.player;
     p.aura_shot_timer += dt;
+}
+
+bool IsAuraReady(World &world) {
+    Player &p = world.player;
+    if (p.aura_shot_timer < p.aura_fire_interval) return false;
+
+    p.aura_shot_timer -= p.aura_fire_interval;
+    return true;
 }
 
 void OnSplitterDeath(World &world, const Enemy& splitter) {

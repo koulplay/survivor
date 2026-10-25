@@ -356,3 +356,51 @@ TEST_CASE("OnSplitterDeath: splitter dead -> vector enemies_to_spawn has 2 twins
     CHECK(world.enemies_to_spawn[0].type == EnemyType::Twin);
     CHECK(world.enemies_to_spawn[1].type == EnemyType::Twin);
 }
+
+TEST_CASE("UpdatePlayerDamage: hit enemy to death by multiple weapons -> died once", "[enemy]") {
+    World world;
+    Enemy &enemy = world.enemies.emplace_back(world.player.pos, EnemyType::Light);
+    world.bullets.emplace_back(world.player.pos, Vector2{});
+    world.player.aura_shot_timer = world.player.aura_fire_interval;
+    enemy.health = 1.f;
+
+    UpdatePlayerDamage(world);
+
+    CHECK(world.exps.size() == 1);
+}
+
+TEST_CASE("IsAuraReady: aura_shot_timer bigger aura_fire_interval -> aura hits", "[weapon]") {
+    World world;
+    world.player.aura_shot_timer = 2.f;
+    world.player.aura_fire_interval = 1.f;
+
+    REQUIRE(IsAuraReady(world));
+    CHECK(world.player.aura_shot_timer == 1.f);
+}
+
+TEST_CASE("IsAuraReady: aura_shot_timer equal aura_fire_interval -> aura hits", "[weapon]") {
+    World world;
+    world.player.aura_shot_timer = 1.f;
+    world.player.aura_fire_interval = 1.f;
+
+    REQUIRE(IsAuraReady(world));
+    CHECK(world.player.aura_shot_timer == 0.f);
+}
+
+TEST_CASE("IsAuraReady: aura_shot_timer lower aura_fire_interval -> aura do nothing", "[weapon]") {
+    World world;
+    world.player.aura_shot_timer = 0.5f;
+    world.player.aura_fire_interval = 0.7f;
+
+    REQUIRE_FALSE(IsAuraReady(world));
+    CHECK(world.player.aura_shot_timer == 0.5f);
+}
+
+TEST_CASE("UpdateAura: one tick -> timer grows by tick", "[weapon]") {
+    World world;
+    world.player.aura_shot_timer = 0.5f;
+    float old_timer = world.player.aura_shot_timer;
+
+    UpdateAura(world, kTick);
+    CHECK(old_timer + kTick == world.player.aura_shot_timer);
+}
