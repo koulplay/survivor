@@ -69,6 +69,8 @@ void Draw(const World &world) {
         DrawRectangleRec(world.player.rect(), RAYWHITE);
     }
 
+    DrawCircleLinesV(world.player.pos, world.player.aura_radius, GOLD);
+
     for (const auto &e: world.enemies) {
         const EnemyDef &e_def = GetEnemyDef(e.type);
         if (e.hit_flash_time > 0.f) {

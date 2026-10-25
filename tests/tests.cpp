@@ -33,13 +33,17 @@ void AddPlayer(Fnv1a &hash, const Player &player) {
     hash.F32(player.pos.y);
     hash.F32(player.size);
     hash.F32(player.speed);
-    hash.F32(player.fire_interval);
+    hash.F32(player.bullet_fire_interval);
     hash.F32(player.bullet_radius);
     hash.F32(player.bullet_speed);
     hash.F32(player.bullet_damage);
+    hash.F32(player.aura_damage);
+    hash.F32(player.aura_radius);
+    hash.F32(player.aura_fire_interval);
+    hash.F32(player.aura_shot_timer);
     hash.F32(player.health);
     hash.F32(player.max_health);
-    hash.F32(player.shot_timer);
+    hash.F32(player.bullet_shot_timer);
     hash.F32(player.magnet_radius);
     hash.F32(player.invulnerability_timer);
 }
@@ -169,55 +173,55 @@ TEST_CASE("TryLevelUp: exp below threshold -> nothing changes", "[level]") {
     CHECK(world.game_state == GameState::Playing);
 }
 
-TEST_CASE("UpdateShooting: timer past interval with enemy -> shoots and keeps leftover", "[shooting]") {
+TEST_CASE("UpdateBullets: timer past interval with enemy -> shoots and keeps leftover", "[shooting]") {
     World world;
     Player &player = world.player;
-    player.fire_interval = 2.f;
-    player.shot_timer = 0.f;
+    player.bullet_fire_interval = 2.f;
+    player.bullet_shot_timer = 0.f;
     world.enemies.emplace_back(world.player.pos, EnemyType::Light);
 
-    UpdateShooting(world, 3.f);
+    UpdateBullets(world, 3.f);
 
     CHECK(world.bullets.size() == 1);
-    CHECK(player.shot_timer == 1.f);
+    CHECK(player.bullet_shot_timer == 1.f);
 }
 
-TEST_CASE("UpdateShooting: timer exactly at interval -> shoots and timer is zero", "[shooting]") {
+TEST_CASE("UpdateBullets: timer exactly at interval -> shoots and timer is zero", "[shooting]") {
     World world;
     Player &player = world.player;
-    player.fire_interval = 2.f;
-    player.shot_timer = 0.f;
+    player.bullet_fire_interval = 2.f;
+    player.bullet_shot_timer = 0.f;
     world.enemies.emplace_back(world.player.pos, EnemyType::Light);
 
-    UpdateShooting(world, 2.f);
+    UpdateBullets(world, 2.f);
 
     CHECK(world.bullets.size() == 1);
-    CHECK(player.shot_timer == 0.f);
+    CHECK(player.bullet_shot_timer == 0.f);
 }
 
-TEST_CASE("UpdateShooting: timer below interval -> no shot and timer keeps counting", "[shooting]") {
+TEST_CASE("UpdateBullets: timer below interval -> no shot and timer keeps counting", "[shooting]") {
     World world;
     Player &player = world.player;
-    player.fire_interval = 2.f;
-    player.shot_timer = 0.f;
+    player.bullet_fire_interval = 2.f;
+    player.bullet_shot_timer = 0.f;
     world.enemies.emplace_back(world.player.pos, EnemyType::Light);
 
-    UpdateShooting(world, 1.f);
+    UpdateBullets(world, 1.f);
 
     CHECK(world.bullets.size() == 0);
-    CHECK(player.shot_timer == 1.f);
+    CHECK(player.bullet_shot_timer == 1.f);
 }
 
-TEST_CASE("UpdateShooting: timer ready without enemies -> no shot and timer held at interval", "[shooting]") {
+TEST_CASE("UpdateBullets: timer ready without enemies -> no shot and timer held at interval", "[shooting]") {
     World world;
     Player &player = world.player;
-    player.fire_interval = 2.f;
-    player.shot_timer = 0.f;
+    player.bullet_fire_interval = 2.f;
+    player.bullet_shot_timer = 0.f;
 
-    UpdateShooting(world, 3.f);
+    UpdateBullets(world, 3.f);
 
     CHECK(world.bullets.size() == 0);
-    CHECK(player.shot_timer == player.fire_interval);
+    CHECK(player.bullet_shot_timer == player.bullet_fire_interval);
 }
 
 TEST_CASE("ApplyUpgrade: RestoreHealth larger than missing health -> health capped at max", "[upgrade]") {
@@ -244,76 +248,76 @@ TEST_CASE("ApplyUpgrade: RestoreHealth smaller than missing health -> health gro
     CHECK(player.health == health + kUpgradeRestoreHealth);
 }
 
-TEST_CASE("UpdateBullets: hit drops enemy health to exactly 0 -> enemy dies", "[enemy]") {
+TEST_CASE("UpdatePlayerDamage: hit drops enemy health to exactly 0 -> enemy dies", "[enemy]") {
     World world;
     Enemy &enemy = world.enemies.emplace_back(world.player.pos, EnemyType::Light);
     world.bullets.emplace_back(world.player.pos, Vector2{});
     world.player.bullet_damage = 1.f;
     enemy.health = 1.f;
 
-    UpdateBullets(world, 2.f);
+    UpdatePlayerDamage(world);
 
     CHECK(enemy.dead);
 }
 
-TEST_CASE("UpdateBullets: hit drops enemy health below 0 -> enemy dies", "[enemy]") {
+TEST_CASE("UpdatePlayerDamage: hit drops enemy health below 0 -> enemy dies", "[enemy]") {
     World world;
     Enemy &enemy = world.enemies.emplace_back(world.player.pos, EnemyType::Light);
     world.bullets.emplace_back(world.player.pos, Vector2{});
     world.player.bullet_damage = 10.f;
     enemy.health = 1.f;
 
-    UpdateBullets(world, 2.f);
+    UpdatePlayerDamage(world);
 
     CHECK(enemy.dead);
 }
 
-TEST_CASE("UpdateBullets: hit drops splitter hp above 0 -> splitter alive and no twins spawn", "[enemy]") {
+TEST_CASE("UpdatePlayerDamage: hit drops splitter hp above 0 -> splitter alive and no twins spawn", "[enemy]") {
     World world;
     Enemy &enemy = world.enemies.emplace_back(world.player.pos, EnemyType::Splitter);
     world.bullets.emplace_back(world.player.pos, Vector2{});
     world.player.bullet_damage = 5.f;
     enemy.health = 10.f;
 
-    UpdateBullets(world, 2.f);
+    UpdatePlayerDamage(world);
 
     CHECK_FALSE(enemy.dead);
     CHECK(world.enemies.size() == 1);
 }
 
-TEST_CASE("UpdateBullets: hit kills splitter -> splitter dead and twins spawn", "[enemy]") {
+TEST_CASE("UpdatePlayerDamage: hit kills splitter -> splitter dead and twins spawn", "[enemy]") {
     World world;
     Enemy &enemy = world.enemies.emplace_back(world.player.pos, EnemyType::Splitter);
     world.bullets.emplace_back(world.player.pos, Vector2{});
     world.player.bullet_damage = 5.f;
     enemy.health = 1.f;
 
-    UpdateBullets(world, 2.f);
+    UpdatePlayerDamage(world);
 
-    CHECK(enemy.dead);
+    CHECK(world.enemies[0].dead);
     CHECK(world.enemies.size() == 3);
 }
 
-TEST_CASE("UpdateBullets: splitter dead -> no exp spawn", "[enemy]") {
+TEST_CASE("UpdatePlayerDamage: splitter dead -> no exp spawn", "[enemy]") {
     World world;
     Enemy &enemy = world.enemies.emplace_back(world.player.pos, EnemyType::Splitter);
     world.bullets.emplace_back(world.player.pos, Vector2{});
     world.player.bullet_damage = 5.f;
     enemy.health = 1.f;
 
-    UpdateBullets(world, 2.f);
+    UpdatePlayerDamage(world);
 
     CHECK(world.exps.size() == 0);
 }
 
-TEST_CASE("UpdateBullets: hit kills splitter -> twins spawn perpendicular player", "[enemy]") {
+TEST_CASE("UpdatePlayerDamage: hit kills splitter -> twins spawn perpendicular player", "[enemy]") {
     World world;
     world.player.pos = {0.f, 0.f};
     Enemy &enemy = world.enemies.emplace_back(Vector2{300.f, 400.f}, EnemyType::Splitter);
     world.bullets.emplace_back(Vector2{300.f, 400.f}, Vector2{});
     enemy.health = 1.f;
 
-    UpdateBullets(world, 2.f);
+    UpdatePlayerDamage(world);
 
     std::vector<Vector2> twins;
     for (const Enemy &e : world.enemies) {
@@ -328,7 +332,7 @@ TEST_CASE("UpdateBullets: hit kills splitter -> twins spawn perpendicular player
            (near(a, {296.f, 403.f}) && near(b, {304.f, 397.f}))));
 }
 
-TEST_CASE("UpdateBullets: hit kills splitter with multiple bullets -> only two twins spawned", "[enemy]") {
+TEST_CASE("UpdatePlayerDamage: hit kills splitter with multiple bullets -> only two twins spawned", "[enemy]") {
     World world;
     Vector2 enemy_pos = {740.f, 360.f};
     Enemy &enemy = world.enemies.emplace_back(enemy_pos, EnemyType::Splitter);
@@ -337,7 +341,7 @@ TEST_CASE("UpdateBullets: hit kills splitter with multiple bullets -> only two t
     world.bullets.emplace_back(enemy_pos, Vector2{});
     enemy.health = 1.f;
 
-    UpdateBullets(world, 2.f);
+    UpdatePlayerDamage(world);
 
     CHECK(world.enemies.size() == 3);
 }
@@ -345,11 +349,10 @@ TEST_CASE("UpdateBullets: hit kills splitter with multiple bullets -> only two t
 TEST_CASE("OnSplitterDeath: splitter dead -> vector enemies_to_spawn has 2 twins", "[enemy]") {
     World world;
     Enemy &enemy = world.enemies.emplace_back(world.player.pos, EnemyType::Splitter);
-    std::vector<Enemy> enemies_to_spawn;
 
-    OnSplitterDeath(world, enemies_to_spawn, enemy);
+    OnSplitterDeath(world, enemy);
 
-    REQUIRE(enemies_to_spawn.size() == 2);
-    CHECK(enemies_to_spawn[0].type == EnemyType::Twin);
-    CHECK(enemies_to_spawn[1].type == EnemyType::Twin);
+    REQUIRE(world.enemies_to_spawn.size() == 2);
+    CHECK(world.enemies_to_spawn[0].type == EnemyType::Twin);
+    CHECK(world.enemies_to_spawn[1].type == EnemyType::Twin);
 }

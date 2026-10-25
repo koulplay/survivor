@@ -94,15 +94,20 @@ struct Bullet {
 struct Player {
     float size = 32.f;
     float speed = 150.f;
-    float fire_interval = 2.f;
     float bullet_radius = 3.f;
     float bullet_speed = 300.f;
     float bullet_damage = 5.f;
+    float bullet_fire_interval = 2.f;
+    float bullet_shot_timer = 0.f;
+
+    float aura_damage = 2.f;
+    float aura_radius = 100.f;
+    float aura_fire_interval = 0.7f;
+    float aura_shot_timer = 0.f;
 
     Vector2 pos{kScreenWidth / 2.f, kScreenHeight / 2.f};
     float health = 100.f;
     float max_health = 100.f;
-    float shot_timer = 0.f;
     float magnet_radius = 60.f;
 
     float invulnerability_timer = 0.f;
@@ -179,6 +184,8 @@ struct World {
     int level = 0;
     float enemy_spawn_timer = 0.f;
     double game_time = 0.f;
+
+    std::vector<Enemy> enemies_to_spawn;
 
     unsigned int seed;
     std::mt19937 rng{seed};

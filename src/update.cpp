@@ -201,25 +201,76 @@ void UpdateGameState(World &world) {
         world.game_state = GameState::Playing;
     }
 }
+
+bool IsAuraReady(World &world) {
+    Player &p = world.player;
+    if (p.aura_shot_timer < p.aura_fire_interval) return false;
+
+    p.aura_shot_timer -= p.aura_fire_interval;
+    return true;
 }
 
-// таймер + новая пуля в ближайшего
-void UpdateShooting(World &world, const float dt) {
+void CreateDamagePopupMessage(World &world, const Vector2 pos, const Vector2 vel, const float damage, EnemyType e_type) {
+    world.damage_popups.push_back({
+        .pos = pos,
+        .vel = vel,
+        .damage = damage,
+        .enemy_type = e_type
+    });
+}
+
+void EnemyDead(World &world, const Enemy& e) {
+        const EnemyDef &e_def = GetEnemyDef(e.type);
+        if (e_def.exp) {
+            world.exps.push_back({e.pos, e_def.exp});
+        }
+        if (e.type == EnemyType::Splitter) {
+            OnSplitterDeath(world, e);
+        }
+}
+
+void EnemyGotDamage(World &world, Enemy &e, const float damage) {
+    if (e.dead) return;
+
+    e.hit_flash_time = kEnemyFlashDuration;
+    CreateDamagePopupMessage(world, e.pos, Vector2{0.f, -kDamagePopupSpeed}, damage, e.type);
+    e.health -= damage;
+    if (e.health <= 0) {
+        e.dead = true;
+        EnemyDead(world, e);
+    }
+}
+}
+
+void UpdateBullets(World &world, const float dt) {
+    for (auto &b: world.bullets) {
+        if (ShouldDieByLifetime(b)) {
+            b.dead = true;
+            continue;
+        }
+        b.age += dt;
+        b.pos += b.vel * dt;
+    }
+
     Player &p = world.player;
-    p.shot_timer += dt;
-    if (p.shot_timer < p.fire_interval) return;
+    p.bullet_shot_timer += dt;
+    if (p.bullet_shot_timer < p.bullet_fire_interval) return;
 
     const std::optional<Vector2> target = NearestEnemyPos(world);
     if (!target) {
-        p.shot_timer = p.fire_interval;
+        p.bullet_shot_timer = p.bullet_fire_interval;
         return;
     }
-
-    p.shot_timer -= p.fire_interval;
+    p.bullet_shot_timer -= p.bullet_fire_interval;
     world.bullets.push_back({p.pos, Vector2Normalize(*target - p.pos) * p.bullet_speed});
 }
 
-void OnSplitterDeath(World &world, std::vector<Enemy>& enemies, const Enemy& splitter) {
+void UpdateAura(World &world, const float dt) {
+    Player &p = world.player;
+    p.aura_shot_timer += dt;
+}
+
+void OnSplitterDeath(World &world, const Enemy& splitter) {
     Vector2 direction_to_player = Vector2Normalize(world.player.pos - splitter.pos);
 
     Vector2 direction_a = {-direction_to_player.y, direction_to_player.x};
@@ -228,56 +279,34 @@ void OnSplitterDeath(World &world, std::vector<Enemy>& enemies, const Enemy& spl
     const float split_offset = splitter_def.radius / 2;
     Vector2 pos_twin_a = splitter.pos + direction_a * split_offset;
     Vector2 pos_twin_b = splitter.pos + direction_b * split_offset;
-    enemies.emplace_back(pos_twin_a, EnemyType::Twin);
-    enemies.emplace_back(pos_twin_b, EnemyType::Twin);
+    world.enemies_to_spawn.emplace_back(pos_twin_a, EnemyType::Twin);
+    world.enemies_to_spawn.emplace_back(pos_twin_b, EnemyType::Twin);
 }
 
-// полёт, попадания, удаление
-void UpdateBullets(World &world, const float dt) {
-    std::vector<Enemy> enemies_to_spawn;    //спавнить специальных врагов при смерти других
-    for (auto &b: world.bullets) {
-        if (ShouldDieByLifetime(b)) {
-            b.dead = true;
-            continue;
-        }
-        if (b.dead) {
-            continue;
-        }
-        b.age += dt;
-        for (auto &e: world.enemies) {
-            if (e.dead) {
-                continue;
+void UpdatePlayerDamage(World &world) {
+    bool aura_shot = IsAuraReady(world);
+
+    for (auto &e: world.enemies) {
+        if (aura_shot) {
+            if (const EnemyDef &e_def = GetEnemyDef(e.type);
+                CheckCollisionCircles(world.player.pos, world.player.aura_radius,
+                                      e.pos, e_def.radius)) {
+                EnemyGotDamage(world, e, world.player.aura_damage);
             }
-            if (b.dead) {
-                break;
-            }
-            if (const EnemyDef &e_def = GetEnemyDef(e.type); CheckCollisionCircles(
-                b.pos, world.player.bullet_radius, e.pos, e_def.radius)) {
-                e.hit_flash_time = kEnemyFlashDuration;
-                world.damage_popups.push_back({
-                    .pos = e.pos,
-                    .vel = Vector2{0.f, -kDamagePopupSpeed},
-                    .damage = world.player.bullet_damage,
-                    .enemy_type = e.type
-                });
-                e.health -= world.player.bullet_damage;
-                if (e.health <= 0.f) {
-                    if (e_def.exp) {
-                        world.exps.push_back({e.pos, e_def.exp});
-                    }
-                    if (e.type == EnemyType::Splitter) {
-                        OnSplitterDeath(world, enemies_to_spawn, e);
-                    }
-                    e.dead = true;
-                    b.dead = true;
-                    break;
-                }
+        }
+        for (auto &b: world.bullets) {
+            if (e.dead) break;
+            if (b.dead) continue;
+            if (const EnemyDef &e_def = GetEnemyDef(e.type);
+                CheckCollisionCircles(b.pos, world.player.bullet_radius,
+                                      e.pos, e_def.radius)) {
+                EnemyGotDamage(world, e, world.player.bullet_damage);
                 b.dead = true;
-                }
+            }
         }
-        b.pos += b.vel * dt;
     }
-    world.enemies.insert(world.enemies.end(), enemies_to_spawn.begin(), enemies_to_spawn.end());
+    world.enemies.insert(world.enemies.end(), world.enemies_to_spawn.begin(), world.enemies_to_spawn.end());
+    world.enemies_to_spawn.clear();
 }
 
 void Update(World &world, const Input& input) {
@@ -287,8 +316,9 @@ void Update(World &world, const Input& input) {
     UpdateEnemies(world, kTick);
     UpdateSeparation(world, kTick);
     UpdateContactDamage(world);
-    UpdateShooting(world, kTick);
     UpdateBullets(world, kTick);
+    UpdateAura(world, kTick);
+    UpdatePlayerDamage(world);
     UpdateExp(world, kTick);
     UpdateDamagePopups(world, kTick);
 
@@ -303,7 +333,7 @@ void Update(World &world, const Input& input) {
 void ApplyUpgrade(Player &p, Upgrade u) {
     // только изменение
     switch (u) {
-        case Upgrade::FireInterval: p.fire_interval = std::max(0.1f, p.fire_interval - kUpgradeFireInterval);
+        case Upgrade::FireInterval: p.bullet_fire_interval = std::max(0.1f, p.bullet_fire_interval - kUpgradeFireInterval);
             break;
         case Upgrade::MoveSpeed: p.speed += kUpgradeMoveSpeed;
             break;
