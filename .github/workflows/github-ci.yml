@@ -8,6 +8,6 @@ jobs:
       - name: Setup
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
       - name: Build
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+        run: cmake --build build
       - name: Test
         run: ctest --test-dir build --output-on-failure

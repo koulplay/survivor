@@ -55,6 +55,6 @@ target_link_libraries(tests PRIVATE survivor_core Catch2::Catch2WithMain)
 target_compile_options(tests PRIVATE ${SURVIVOR_WARNINGS})
 
 enable_testing()
-list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras) # там лежит Catch.cmake ----- #list(APPEND CMAKE_MODULE_PATH \${Catch2_SOURCE_DIR}/extras)
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras) # там лежит
 include(Catch)
 catch_discover_tests(tests) # каждый TEST_CASE — отдельный тест в ctest
