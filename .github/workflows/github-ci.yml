@@ -1,16 +1,15 @@
-# Сборка и тесты на каждый push: Windows (MSYS2 UCRT64, как у тебя) и Linux.
 name: CI
 
 on:
   push:
-    paths-ignore:            # поменялись только документы — CI не запускаем
+    paths-ignore:
       - '**.md'
       - 'docs/**'
 
 permissions:
-  contents: read             # задаче нужно только прочитать код
+  contents: read
 
-concurrency:                 # новый push в ту же ветку отменяет старый запуск
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
@@ -18,9 +17,9 @@ jobs:
   build:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30      # зависло — стоп через 30 минут, а не через 6 часов
+    timeout-minutes: 30
     strategy:
-      fail-fast: false       # упала одна машина — вторая всё равно доработает
+      fail-fast: false
       matrix:
         include:
           - name: Windows · MSYS2 UCRT64
