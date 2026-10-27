@@ -1,3 +1,4 @@
+#include <string>
 #include <algorithm>
 #include <cmath>
 #include <format>
@@ -11,15 +12,14 @@ namespace {
     return (world.current_exp / world.exp_to_level);
 }
 
-[[nodiscard]] const char *UpgradeName(Upgrade u) {
-    // только текст
+[[nodiscard]] std::string UpgradeName(Upgrade u) {
     switch (u) {
-        case Upgrade::FireInterval: return TextFormat("Shot Interval -%.1f/s", kUpgradeFireInterval);
-        case Upgrade::MoveSpeed: return TextFormat("MoveSpeed +%.1f/s", kUpgradeMoveSpeed);
-        case Upgrade::BulletSpeed: return TextFormat("BulletSpeed +%.1f/s", kUpgradeBulletSpeed);
-        case Upgrade::Magnet: return TextFormat("Magnet +%.1f", kUpgradeMagnet);
-        case Upgrade::MaxHealth: return TextFormat("MaxHealth +%.1f", kUpgradeMaxHealth);
-        case Upgrade::RestoreHealth: return TextFormat("RestoreHealth +%.1f", kUpgradeRestoreHealth);
+        case Upgrade::FireInterval: return std::format("Shot Interval -{:.1f}/s", kUpgradeFireInterval);
+        case Upgrade::MoveSpeed: return std::format("MoveSpeed +{:.1f}/s", kUpgradeMoveSpeed);
+        case Upgrade::BulletSpeed: return std::format("BulletSpeed +{:.1f}/s", kUpgradeBulletSpeed);
+        case Upgrade::Magnet: return std::format("Magnet +{:.1f}/s", kUpgradeMagnet);
+        case Upgrade::MaxHealth: return std::format("MaxHealth +{:.1f}/s", kUpgradeMaxHealth);
+        case Upgrade::RestoreHealth: return std::format("RestoreHealth +{:.1f}", kUpgradeRestoreHealth);
         case Upgrade::Count: break;
     }
     return "?";
@@ -116,8 +116,8 @@ void Draw(const World &world) {
             if (m.selected == i) {
                 DrawRectangleLines(rec.x, rec.y, rec.width, rec.height, GOLD);
             }
-            const char *upgrade_name = UpgradeName(m.options[i]);
-            DrawText(upgrade_name, rec.x + (rec.width - MeasureText(upgrade_name, 20)) / 2, rec.y + (rec.height / 2),
+            std::string upgrade_name = UpgradeName(m.options[i]);
+            DrawText(upgrade_name.c_str(), rec.x + (rec.width - MeasureText(upgrade_name.c_str(), 20)) / 2, rec.y + (rec.height / 2),
                      20, GOLD);
         }
     }
