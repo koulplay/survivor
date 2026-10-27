@@ -23,7 +23,7 @@
 </project>
 
 <environment>
-Компилятор и версия: The CXX compiler identification is GNU 13.1.0
+Компилятор и версия: GCC 16.2.0 из MSYS2, окружение UCRT64 (C:\dev\utilities\msys64\ucrt64); в CLion — тулчейн UCRT с файлом окружения, который добавляет ucrt64\bin в PATH; папка сборки cmake-build-debug-ucrt64
 Генератор сборки: Ninja
 Стандарт C++: 20
 Система сборки: CMake

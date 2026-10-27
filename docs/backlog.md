@@ -8,9 +8,10 @@
 
 | Что | Где | Когда |
 |---|---|---|
-| `std::min` без `#include <algorithm>`: приходит через `world.h` → `<vector>` | `main.cpp` | C2: CI на Linux ловит заголовки, пришедшие транзитивно |
-| `#include <string>` не используется; в `draw.cpp` наоборот — `std::string` есть, `<string>` нет (приходит через `<format>`) | `update.cpp`, `draw.cpp` | C2 |
-| `size_t` без `std::` — приходит транзитивно | `world.cpp`, `update.cpp` | C2 |
+| `std::min` без `#include <algorithm>`: приходит через `world.h` → `<vector>` | `main.cpp` | C2 или D2. CI этого не поймает: на Windows (MSYS2) и на Linux одна стандартная библиотека — libstdc++; всё собирается на GCC 13.3, 14.2 и 16.2 и даже на clang 18 с libc++. Находит `clang-include-cleaner` (прогон Claude 25.10.2026; урок C2, раздел 3.4) |
+| `#include <string>` не используется; в `draw.cpp` наоборот — `std::string` есть, `<string>` нет (приходит через `<format>`) | `update.cpp`, `draw.cpp` | C2 или D2 — как строкой выше |
+| `size_t` без `std::` — приходит транзитивно; стандарт не обещает `::size_t` даже из `<cstddef>` (урок C2, 3.4) | `world.cpp`, `update.cpp` | C2 или D2 — как строками выше |
+| Ещё недостающие заголовки по `clang-include-cleaner` 18: в `tests.cpp` — `<cstdint>` (`std::uint64_t`, `uint32_t`), `<cstddef>`, `<vector>`, `catch2/catch_message.hpp` (`CAPTURE`); в `update.cpp` — `<vector>` (прогон Claude 25.10.2026) | `tests.cpp`, `update.cpp` | C2 или D2 — как строками выше |
 | Один и тот же текст и размер шрифта записаны в нескольких местах (NOTES, №8): у GAME OVER — текст и размер дважды, у числа урона — размер 15 трижды, у HP, таймера, уровня, карточек и зерна — размер дважды | `draw.cpp` | этап I: вывод текста одной функцией; до тех пор новый текст — в одной переменной |
 | Прозрачность числа урона `(age / lifetime - 1) * -1` — это `1 - age / lifetime` | `draw.cpp` | при случае |
 | `UpdateBullets` — и полёт со сроком жизни, и стрельба (таймер, новая пуля); попадания ауры и пуль — вместе в `UpdatePlayerDamage` (после C1) | `update.cpp` | C3: оружие станет классами (Update Method) |
