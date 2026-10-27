@@ -1,13 +1,77 @@
-name: github-ci
-on: [push]
+# Сборка и тесты на каждый push: Windows (MSYS2 UCRT64, как у тебя) и Linux.
+name: CI
+
+on:
+  push:
+    paths-ignore:            # поменялись только документы — CI не запускаем
+      - '**.md'
+      - 'docs/**'
+
+permissions:
+  contents: read             # задаче нужно только прочитать код
+
+concurrency:                 # новый push в ту же ветку отменяет старый запуск
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  look:
-    runs-on: windows-2025
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30      # зависло — стоп через 30 минут, а не через 6 часов
+    strategy:
+      fail-fast: false       # упала одна машина — вторая всё равно доработает
+      matrix:
+        include:
+          - name: Windows · MSYS2 UCRT64
+            os: windows-2025
+            shell: msys2 {0}
+            cc: gcc
+            cxx: g++
+          - name: Linux · GCC 14
+            os: ubuntu-24.04
+            shell: bash
+            cc: gcc-14
+            cxx: g++-14
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+
     steps:
-      - uses: actions/checkout@v7
-      - name: Setup
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install raylib dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev
+
+      - name: Install MSYS2 toolchain (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+
+      - name: Tool versions
+        run: |
+          ${{ matrix.cxx }} --version
+          cmake --version
+          ninja --version
+
+      - name: Configure
+        run: >-
+          cmake -S . -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_C_COMPILER=${{ matrix.cc }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+
       - name: Build
         run: cmake --build build
+
       - name: Test
         run: ctest --test-dir build --output-on-failure
