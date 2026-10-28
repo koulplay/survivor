@@ -25,6 +25,7 @@
 | Деление — поведение в коде (`if (e.type == EnemyType::Splitter)`), а не правило в строке вида | `EnemyDead`, `OnSplitterDeath` | при втором делящемся виде или в G1: `std::optional<SplitRule>` в строке вида |
 | Локальные векторы без `const`; `direction_b` — это `-direction_a` | `OnSplitterDeath` | при случае |
 | `Input` (теперь с `Down` и `Pressed`) лежит в `world.h`, хотя это не мир | `world.h` | этап I: `src/input.h` (переназначение клавиш, геймпад) |
+| В `world.h` не только мир: размеры карточек и полосы опыта (`kCard…`, `kExpBar…`) и `CardRect`; про `Input` — строка выше. Норма «в `world.h` — только мир» — `PLAN.md`, «Правила кода» (28.10.2026) | `world.h` | решаешь ты: отдельным коротким коммитом или вместе с `Input` в этапе I |
 | В тестах `ApplyUpgrade` создаётся `World`, хотя функция принимает `Player&` | `tests.cpp` | при случае |
 | `MovePlayer` ничего не двигает, а возвращает направление — по рецепту имён нужно имя без глагола изменения (например, `MoveDirection`) | `update.cpp` | при случае |
 | `auto inp = input.pressed;` — копия вместо ссылки, имя-сокращение (B3) | `UpdateLevelUp` | при случае |
