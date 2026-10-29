@@ -247,6 +247,7 @@
 **F2. Загрузка ассетов и ошибки.**
 Новое: менеджер ресурсов (загрузка по имени один раз, наружу — дескриптор); путь к ассетам от папки программы (`GetApplicationDirectory()`) и копирование ассетов средствами CMake; стратегия ошибок — здесь впервые появляется файл, которого может не оказаться.
 - Стратегию выбирают рано: C++ Core Guidelines, E.1 «Develop an error-handling strategy early in a design». Исключения — где продолжать нельзя; `std::optional` — где значения может не быть; C++23 — ещё `std::expected`. Итог — `docs/decisions/003-errors.md` (пишет Claude, ты проверяешь причины).
+- Мини-урок (добавлен 29.10.2026 по твоему вопросу «исключения, раскручивание стека и handle»): механика исключений. `throw` → поиск обработчика вверх по стеку вызовов → раскручивание стека: деструкторы локальных объектов вызываются в обратном порядке создания, до входа в `catch` (cppreference, «throw», раздел «Stack unwinding»). Прогон Claude (GCC 13.3): `menu` → `level` → `sprite.png` открыты, бросок в загрузке спрайта — закрыты `sprite.png` → `level` → `menu`, потом `catch`, игра продолжает. Отсюда связь с F1: ресурс без RAII-обёртки при исключении течёт (Core Guidelines, E.6 «Use RAII to prevent leaks»). Бросать — по значению, ловить — по ссылке (E.15). Исключение из деструктора во время раскрутки и исключение, дошедшее до края `noexcept`-функции, — `std::terminate`; деструкторы неявно `noexcept` (cppreference, «throw» и «noexcept specifier»; Core Guidelines, E.16). Первая встреча с темой — уже в C3, эксперимент 4.3: вектор копирует, а не перемещает, чтобы при исключении вернуть старое состояние.
 - raylib открывает файлы через `fopen`, а папку программы узнаёт через `GetModuleFileNameA` (`rcore.c`, raylib 6.0) — в кодировке системы. Запусти игру из папки с нелатинскими символами в имени; если загрузка сломается — решение в K.
 - Ассеты — Kenney или другие с понятной лицензией; всё — в `CREDITS.md`.
 
@@ -293,11 +294,11 @@
 
 **Чередование:** почти всё видно; невидимые F1, F2 и F4 ставить между видимыми.
 
-**Спросят на собеседовании:** что такое RAII и правило пяти; почему некопируемый объект можно вернуть по значению; исключения, `std::optional` или `std::expected` — когда что; что даёт `noexcept`; зачем очередь событий и чем опасна ссылка на объект внутри события; чем `std::variant` отличается от наследования и когда что выбрать.
+**Спросят на собеседовании:** что такое RAII и правило пяти; почему некопируемый объект можно вернуть по значению; исключения, `std::optional` или `std::expected` — когда что; что происходит с локальными объектами при раскручивании стека и почему деструктор не должен бросать; что даёт `noexcept`; зачем очередь событий и чем опасна ссылка на объект внутри события; чем `std::variant` отличается от наследования и когда что выбрать.
 
 **Самостоятельная задача F.** Эффект эволюции оружия целиком: событие → вспышка, звук, частицы.
 
-**Читать:** cppreference, «The rule of three/five/zero» — https://en.cppreference.com/cpp/language/rule_of_three ; C++ Core Guidelines, E.1 — https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#re-design ; raylib `rlgl.h` — https://github.com/raysan5/raylib/blob/6.0/src/rlgl.h ; Game Programming Patterns, «Event Queue» — https://gameprogrammingpatterns.com/event-queue.html ; cppreference, `std::variant` — https://en.cppreference.com/w/cpp/utility/variant ; «Juice it or lose it» — https://www.youtube.com/watch?v=Fy0aCDmgnxg ; Squirrel Eiserloh, «Math for Game Programmers: Juicing Your Cameras With Math» — https://gdcvault.com/play/1023146/Math-for-Game-Programmers-Juicing
+**Читать:** cppreference, «The rule of three/five/zero» — https://en.cppreference.com/cpp/language/rule_of_three ; C++ Core Guidelines, E.1 — https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#re-design ; E.6, E.15, E.16 — https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#re-raii ; cppreference, «throw», раздел «Stack unwinding» — https://en.cppreference.com/w/cpp/language/throw ; raylib `rlgl.h` — https://github.com/raysan5/raylib/blob/6.0/src/rlgl.h ; Game Programming Patterns, «Event Queue» — https://gameprogrammingpatterns.com/event-queue.html ; cppreference, `std::variant` — https://en.cppreference.com/w/cpp/utility/variant ; «Juice it or lose it» — https://www.youtube.com/watch?v=Fy0aCDmgnxg ; Squirrel Eiserloh, «Math for Game Programmers: Juicing Your Cameras With Math» — https://gdcvault.com/play/1023146/Math-for-Game-Programmers-Juicing
 
 ---
 
@@ -308,6 +309,7 @@
 Новое: toml++; своя проверка схемы с местом ошибки; лог через `std::format` и `std::source_location`.
 - `data/enemies.toml`, `weapons.toml`, `items.toml`. Ошибка разбора в toml++ сообщает строку и столбец, а у каждого узла есть `source()` — место в исходном файле (документация toml++). Ошибка — экран с сообщением «файл:строка:столбец: что не так», а не падение.
 - Мини-урок: `std::string_view` — дешёвый взгляд на чужую строку; он висит, если строка-владелец умерла или перевыделила память (тот же класс ошибок, что `std::span` в E2).
+- Своё исключение (добавлено 29.10.2026 по твоему вопросу «буду уметь делать свои исключения?»): `DataError` — наследник `std::runtime_error` с полями «файл, строка, столбец». Зачем свой тип: тому, кто ловит, нужно не только сообщение, а место ошибки — для экрана «файл:строка:столбец». Пока добавить нечего, хватает стандартного `std::runtime_error` — так в F2 (Core Guidelines, E.14 «Use purpose-designed user-defined types as exceptions»: стандартный тип годится, «if no useful information can be added at the point of detection»). Так же устроена сама toml++: `toml::parse_error` с `description()` и `source()` (документация toml++). Ловить — там, где можно что-то сделать, а не в каждой функции (E.17). Дальше тот же тип повторяется: G2 — битая ссылка с подсказкой; G3 — ловится, старые данные остаются; этап I — битое сохранение. Тест на ошибку — `REQUIRE_THROWS_AS` (Catch2, `docs/assertions.md`, раздел «Exceptions»).
 
 Готово, когда: новый враг — правка файла без перекомпиляции; битый файл даёт понятную ошибку.
 
@@ -338,11 +340,11 @@
 
 **Чередование:** видно — G1 (новый враг без перекомпиляции), G3, G5; невидимые G2 и G4 — между ними.
 
-**Спросят на собеседовании:** чем опасен `std::string_view`; сложность редакционного расстояния по времени и памяти; какие бывают гарантии безопасности исключений и как добиться строгой; чем `lower_bound` отличается от `upper_bound`.
+**Спросят на собеседовании:** чем опасен `std::string_view`; сложность редакционного расстояния по времени и памяти; какие бывают гарантии безопасности исключений и как добиться строгой; как сделать своё исключение, когда хватает стандартного и где его ловить; чем `lower_bound` отличается от `upper_bound`.
 
 **Самостоятельная задача G.** Новое поле у врагов — броня: схема, проверка, применение в формуле урона, инспектор, тест.
 
-**Читать:** toml++ — https://marzer.github.io/tomlplusplus/ ; cppreference, «Exceptions» (раздел об исключениях и гарантиях) — https://en.cppreference.com/w/cpp/language/exceptions ; Wagner и Fischer, 1974 — https://dl.acm.org/doi/10.1145/321796.321811 ; оружие в Brotato — https://brotato.wiki.spellsandguns.com/Weapons
+**Читать:** toml++ — https://marzer.github.io/tomlplusplus/ ; C++ Core Guidelines, E.14 и E.17 — https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#re-exception-types ; Catch2, «Exceptions» — https://github.com/catchorg/Catch2/blob/devel/docs/assertions.md ; cppreference, «Exceptions» (раздел об исключениях и гарантиях) — https://en.cppreference.com/w/cpp/language/exceptions ; Wagner и Fischer, 1974 — https://dl.acm.org/doi/10.1145/321796.321811 ; оружие в Brotato — https://brotato.wiki.spellsandguns.com/Weapons
 
 ---
 
