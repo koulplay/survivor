@@ -46,9 +46,7 @@ void Pistol::ApplyDamage(World &world) {
         for (auto &b: bullets) {
             if (e.dead) break;
             if (b.dead) continue;
-            if (const EnemyDef &e_def = GetEnemyDef(e.type);
-                CheckCollisionCircles(b.pos, radius,
-                                      e.pos, e_def.radius)) {
+            if (CheckCollisionCircles(b.pos, radius, e.pos, GetEnemyDef(e.type).radius)) {
                 DamageEnemy(world, e, damage);
                 b.dead = true;
             }
