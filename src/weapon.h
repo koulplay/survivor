@@ -7,11 +7,6 @@
 
 constexpr float kBulletMaxLifetime = 10.f;
 constexpr float kBulletMinFireInterval = 0.1f;
-constexpr float kBulletFireInterval = 2.f;
-
-constexpr float kAuraFireInterval = 0.7f;
-
-constexpr float kBladesFireInterval = 0.1f;
 
 constexpr float kUpgradeFireInterval = 0.2f;
 constexpr float kUpgradeBulletSpeed = 25.f;
@@ -39,6 +34,8 @@ public:
 
     [[nodiscard]] const std::vector<Bullet>& GetBullets() const;
 
+    static constexpr float kFireInterval = 2.f;
+
 private:
     void UpdateBullets(World &world, const float dt);
     void ApplyDamage(World &world);
@@ -56,6 +53,8 @@ public:
     void Update(World &world, const float dt) override;
     void Draw(const World &world) const override;
 
+    static constexpr float kFireInterval = 0.7f;
+
 private:
     [[nodiscard]] bool TryTriggerAura(const float dt);
     void ApplyDamage(World &world);
@@ -69,6 +68,8 @@ class Blades : public Weapon {
 public:
     void Update(World &world, const float dt) override;
     void Draw(const World &world) const override;
+
+    static constexpr float kFireInterval = 0.1f;
 
 private:
     void UpdateBlades(World &world, const float dt);
