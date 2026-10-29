@@ -62,4 +62,30 @@ private:
     float shot_timer = 0.f;
 };
 
+class Blades : public Weapon {
+public:
+    void Update(World &world, const float dt) override;
+    void Draw(const World &world) const override;
+
+private:
+    void UpdateBlades(World &world, const float dt);
+    [[nodiscard]] bool TryTriggerBlades(const float dt);
+    [[nodiscard]] bool TrySpawnBlades(const float dt);
+    void ApplyDamage(World &world);
+
+    std::vector<Vector2> blades_pos;
+    float angle = 0.f;
+    float damage = 2.f;
+    float circle_radius = 130.f;
+    float blade_radius = 7.f;
+    std::size_t count = 1;
+    static constexpr float rotate_speed = 75.f;
+    float fire_interval = 0.1f;
+    float shot_timer = 0.f;
+    float spawn_interval = 2.f;
+    float live_interval = 4.f;
+    float timer = 0.f;
+    bool active = true;
+};
+
 [[nodiscard]] std::vector<std::unique_ptr<Weapon>> StartingWeapons();
