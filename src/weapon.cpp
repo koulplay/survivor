@@ -30,7 +30,7 @@ void Pistol::UpdateBullets(World &world, const float dt) {
         MoveBullet(b, dt);
     }
     shot_timer += dt;
-    float interval = std::max(kBulletMinFireInterval, fire_interval - world.player.bullet_fire_interval_upgrade);
+    float interval = std::max(kBulletMinFireInterval, kBulletFireInterval - world.player.bullet_fire_interval_upgrade);
     if (shot_timer < interval) return;
 
     const std::optional<Vector2> target = NearestEnemyPos(world);
@@ -67,8 +67,8 @@ void Pistol::Update(World &world, const float dt) {
 
 [[nodiscard]] bool Aura::TryTriggerAura(const float dt) {
     shot_timer += dt;
-    if (shot_timer < fire_interval) return false;
-    shot_timer -= fire_interval;
+    if (shot_timer < kAuraFireInterval) return false;
+    shot_timer -= kAuraFireInterval;
     return true;
 }
 
@@ -109,8 +109,8 @@ void Blades::UpdateBlades(World &world, const float dt) {
 
 [[nodiscard]] bool Blades::TryTriggerBlades(const float dt) {
     shot_timer += dt;
-    if (shot_timer < fire_interval) return false;
-    shot_timer -= fire_interval;
+    if (shot_timer < kBladesFireInterval) return false;
+    shot_timer -= kBladesFireInterval;
     return true;
 }
 

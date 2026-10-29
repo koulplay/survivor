@@ -7,6 +7,11 @@
 
 constexpr float kBulletMaxLifetime = 10.f;
 constexpr float kBulletMinFireInterval = 0.1f;
+constexpr float kBulletFireInterval = 2.f;
+
+constexpr float kAuraFireInterval = 0.7f;
+
+constexpr float kBladesFireInterval = 0.1f;
 
 constexpr float kUpgradeFireInterval = 0.2f;
 constexpr float kUpgradeBulletSpeed = 25.f;
@@ -43,7 +48,6 @@ private:
     float damage = 5.f;
     float speed = 300.f;
     float radius = 3.f;
-    float fire_interval = 2.f;
     float shot_timer = 0.f;
 };
 
@@ -58,7 +62,6 @@ private:
 
     float damage = 2.f;
     float radius = 100.f;
-    float fire_interval = 0.7f;
     float shot_timer = 0.f;
 };
 
@@ -80,7 +83,6 @@ private:
     float blade_radius = 7.f;
     std::size_t count = 1;
     static constexpr float rotate_speed = 75.f;
-    float fire_interval = 0.1f;
     float shot_timer = 0.f;
     float spawn_interval = 2.f;
     float live_interval = 4.f;
