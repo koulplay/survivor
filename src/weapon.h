@@ -88,7 +88,7 @@ private:
     float spawn_interval = 2.f;
     float live_interval = 4.f;
     float timer = 0.f;
-    bool active = true;
+    bool active = false;
 };
 
 [[nodiscard]] std::vector<std::unique_ptr<Weapon>> StartingWeapons();
