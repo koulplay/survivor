@@ -15,7 +15,7 @@ struct World;
 
 class Cooldown {
 public:
-    [[nodiscard]] bool Tick(const float interval, const float dt); // Возвращает false если выполняет условие (timer <= interval). Если условие не выполняется - интервал списывается, сдача остаётся
+    [[nodiscard]] bool Tick(const float interval, const float dt); // Возвращает false если выполняет условие (timer < interval). Если условие не выполняется - интервал списывается, сдача остаётся
     void HoldReady(const float interval);
 
 private:
