@@ -13,6 +13,15 @@ constexpr float kUpgradeBulletSpeed = 25.f;
 
 struct World;
 
+class Cooldown {
+public:
+    [[nodiscard]] bool Tick(const float interval, const float dt); // Возвращает false если выполняет условие (timer <= interval). Если условие не выполняется - интервал списывается, сдача остаётся
+    void HoldReady(const float interval);
+
+private:
+    float timer = 0.f;
+};
+
 class Weapon {
 public:
     virtual void Update(World &world, const float dt) = 0;
@@ -45,7 +54,7 @@ private:
     float damage = 5.f;
     float speed = 300.f;
     float radius = 3.f;
-    float shot_timer = 0.f;
+    Cooldown cooldown;
 };
 
 class Aura : public Weapon {
@@ -56,12 +65,11 @@ public:
     static constexpr float kFireInterval = 0.7f;
 
 private:
-    [[nodiscard]] bool TryTriggerAura(const float dt);
     void ApplyDamage(World &world);
 
     float damage = 2.f;
     float radius = 100.f;
-    float shot_timer = 0.f;
+    Cooldown cooldown;
 };
 
 class Blades : public Weapon {
@@ -77,7 +85,6 @@ public:
 
 private:
     void UpdateBlades(World &world, const float dt);
-    [[nodiscard]] bool TryTriggerBlades(const float dt);
     [[nodiscard]] bool TrySpawnBlades(const float dt);
     void ApplyDamage(World &world);
 
@@ -87,8 +94,8 @@ private:
     float blade_radius = 7.f;
     std::size_t count = 1;
     static constexpr float rotate_speed = 75.f;
-    float shot_timer = 0.f;
-    float timer = 0.f;
+    Cooldown cooldown_spawn;
+    Cooldown cooldown_hit;
     bool active = false;
 };
 

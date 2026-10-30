@@ -23,22 +23,29 @@ void MoveBullet(Bullet &b, const float dt) {
 }
 }
 
+bool Cooldown::Tick(const float interval, const float dt){
+    timer += dt;
+    if (timer < interval) return false;
+    timer -= interval;
+    return true;
+}
+void Cooldown::HoldReady(const float interval) {
+    timer = interval;
+}
 
 void Pistol::UpdateBullets(World &world, const float dt) {
     for (auto &b: bullets) {
         DeleteBulletByLifetime(b);
         MoveBullet(b, dt);
     }
-    shot_timer += dt;
-    float interval = std::max(kBulletMinFireInterval, kFireInterval - world.player.bullet_fire_interval_upgrade);
-    if (shot_timer < interval) return;
+    const float interval = std::max(kBulletMinFireInterval, kFireInterval - world.player.bullet_fire_interval_upgrade);
+    if (!cooldown.Tick(interval, dt)) return;
 
     const std::optional<Vector2> target = NearestEnemyPos(world);
     if (!target) {
-        shot_timer = interval;
+        cooldown.HoldReady(interval);
         return;
     }
-    shot_timer -= interval;
     bullets.push_back({world.player.pos, Vector2Normalize(*target - world.player.pos) * (speed + world.player.bullet_speed_upgrade)});
 }
 
@@ -65,13 +72,6 @@ void Pistol::Update(World &world, const float dt) {
     std::erase_if(bullets, [](const Bullet &b) { return b.dead; });
 }
 
-[[nodiscard]] bool Aura::TryTriggerAura(const float dt) {
-    shot_timer += dt;
-    if (shot_timer < kFireInterval) return false;
-    shot_timer -= kFireInterval;
-    return true;
-}
-
 void Aura::ApplyDamage(World &world) {
     for (auto &e: world.enemies) {
         if (CheckCollisionCircles(world.player.pos, radius, e.pos, GetEnemyDef(e.type).radius)) {
@@ -81,7 +81,7 @@ void Aura::ApplyDamage(World &world) {
 }
 
 void Aura::Update(World &world, const float dt) {
-    if (!TryTriggerAura(dt)) return;
+    if (!cooldown.Tick(kFireInterval, dt)) return;
     ApplyDamage(world);
 }
 
@@ -98,20 +98,11 @@ void Blades::UpdateBlades(World &world, const float dt) {
 }
 
 [[nodiscard]] bool Blades::TrySpawnBlades(const float dt) {
-    timer += dt;
     const float interval = active ? kLiveInterval : kSpawnInterval;
-    if (timer >= interval) {
-        timer -= interval;
+    if (cooldown_spawn.Tick(interval, dt)) {
         active = !active;
     }
     return active;
-}
-
-[[nodiscard]] bool Blades::TryTriggerBlades(const float dt) {
-    shot_timer += dt;
-    if (shot_timer < kFireInterval) return false;
-    shot_timer -= kFireInterval;
-    return true;
 }
 
 void Blades::ApplyDamage(World &world) {
@@ -128,7 +119,7 @@ void Blades::Update(World &world, const float dt) {
     blades_pos.clear();
     if (!TrySpawnBlades(dt)) return;
     UpdateBlades(world, dt);
-    if (!TryTriggerBlades(dt)) return;
+    if (!cooldown_hit.Tick(kFireInterval, dt)) return;
     ApplyDamage(world);
 }
 
