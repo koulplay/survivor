@@ -132,6 +132,9 @@ void Blades::Update(World &world, const float dt) {
     ApplyDamage(world);
 }
 
+bool Blades::IsActive() const {
+    return active;
+}
 
 void Pistol::Draw(const World &) const {
     for (const auto &b: bullets) {

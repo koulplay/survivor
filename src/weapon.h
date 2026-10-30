@@ -68,6 +68,7 @@ class Blades : public Weapon {
 public:
     void Update(World &world, const float dt) override;
     void Draw(const World &world) const override;
+    [[nodiscard]] bool IsActive() const;
 
     static constexpr float kFireInterval = 0.1f;
     static constexpr float kSpawnInterval = 2.f;
