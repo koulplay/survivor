@@ -92,7 +92,7 @@ void Blades::UpdateBlades(World &world, const float dt) {
         float angle_rad = (angle + step * i) * DEG2RAD;
         float cos_rad = std::cos(angle_rad);
         float sin_rad = std::sin(angle_rad);
-        Vector2 point = { world.player.pos.x + cos_rad*circle_radius, world.player.pos.y - sin_rad*circle_radius };
+        Vector2 point = { world.player.pos.x + cos_rad*kCircleRadius, world.player.pos.y - sin_rad*kCircleRadius };
         blades_pos.push_back(point);
     }
 }

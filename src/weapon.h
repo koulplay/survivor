@@ -70,6 +70,7 @@ public:
     void Draw(const World &world) const override;
 
     static constexpr float kFireInterval = 0.1f;
+    static constexpr float kCircleRadius = 130.f;
 
 private:
     void UpdateBlades(World &world, const float dt);
@@ -80,7 +81,6 @@ private:
     std::vector<Vector2> blades_pos;
     float angle = 0.f;
     float damage = 2.f;
-    float circle_radius = 130.f;
     float blade_radius = 7.f;
     std::size_t count = 1;
     static constexpr float rotate_speed = 75.f;
