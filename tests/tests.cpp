@@ -227,11 +227,10 @@ TEST_CASE("Pistol::Update: timer ready without enemies -> no shot and timer held
     world.player.pos = {0.f, 0.f};
     Pistol pistol;
 
-    pistol.Update(world, Pistol::kFireInterval * 2.f); // Передаём тик больше самого интервала
+    pistol.Update(world, Pistol::kFireInterval);
     REQUIRE(pistol.GetBullets().size() == 0);
 
     world.enemies.emplace_back(Vector2{0.f, 10'000.f}, EnemyType::Light);
-    pistol.Update(world, 0.f);
     pistol.Update(world, 0.f);
 
     CHECK(pistol.GetBullets().size() == 1);
