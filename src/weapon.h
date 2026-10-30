@@ -70,6 +70,8 @@ public:
     void Draw(const World &world) const override;
 
     static constexpr float kFireInterval = 0.1f;
+    static constexpr float kSpawnInterval = 2.f;
+    static constexpr float kLiveInterval = 4.f;
     static constexpr float kCircleRadius = 130.f;
 
 private:
@@ -85,8 +87,6 @@ private:
     std::size_t count = 1;
     static constexpr float rotate_speed = 75.f;
     float shot_timer = 0.f;
-    float spawn_interval = 2.f;
-    float live_interval = 4.f;
     float timer = 0.f;
     bool active = false;
 };

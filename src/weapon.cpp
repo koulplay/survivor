@@ -99,7 +99,7 @@ void Blades::UpdateBlades(World &world, const float dt) {
 
 [[nodiscard]] bool Blades::TrySpawnBlades(const float dt) {
     timer += dt;
-    const float interval = active ? live_interval : spawn_interval;
+    const float interval = active ? kLiveInterval : kSpawnInterval;
     if (timer >= interval) {
         timer -= interval;
         active = !active;
