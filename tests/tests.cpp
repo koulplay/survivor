@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <catch2/catch_test_macros.hpp>
 #include "world.h"
 #include "update.h"
@@ -268,6 +269,7 @@ TEST_CASE("Aura::Update: timer exactly at interval -> aura triggers and timer is
     const float damage = base_enemy_health - enemy.health;
 
     aura.Update(world, 0.f);
+
     CHECK(enemy.health == base_enemy_health - damage);
 }
 
@@ -295,6 +297,60 @@ TEST_CASE("Aura::Update: enemy out of aura range -> enemy survives", "[weapon]")
     aura.Update(world, Aura::kFireInterval);
 
     CHECK(enemy.health == base_enemy_health);
+}
+
+void SpawnEnemiesInBladesRadius(World &world) {
+    for (std::size_t i = 0; i < 360; ++i) {
+        const float angle_rad = i * DEG2RAD;
+        const float cos_rad = std::cos(angle_rad);
+        const float sin_rad = std::sin(angle_rad);
+        Vector2 point = { world.player.pos.x + cos_rad * Blades::kCircleRadius, world.player.pos.y - sin_rad * Blades::kCircleRadius };
+        world.enemies.emplace_back(point, EnemyType::Light);
+    }
+}
+
+void MakeBladesActive(World &world, Blades &blades) {
+    const auto max_ticks = static_cast<std::size_t>(std::ceil(Blades::kSpawnInterval / kTick)) + 1; //Добавляем кадр для активации клинков
+    for (std::size_t tick = 0; tick < max_ticks && !blades.IsActive(); ++tick) {
+        blades.Update(world, kTick);
+    }
+    REQUIRE(blades.IsActive());
+}
+
+TEST_CASE("Blades::Update: blades active -> hit enemy", "[weapon]") {
+    World world;
+    world.player.pos = {0.f, 0.f};
+    SpawnEnemiesInBladesRadius(world);
+    Blades blades;
+    MakeBladesActive(world, blades);
+
+    blades.Update(world, Blades::kFireInterval);
+
+    CHECK(std::ranges::any_of(world.enemies, [](const Enemy& e) { return e.health < GetEnemyDef(e.type).max_health; }));
+}
+
+TEST_CASE("Blades::Update: blades not active -> does nothing", "[weapon]") {
+    World world;
+    world.player.pos = {0.f, 0.f};
+    SpawnEnemiesInBladesRadius(world);
+    Blades blades;
+
+    blades.Update(world, Blades::kSpawnInterval / 2.f);
+
+    CHECK(std::ranges::none_of(world.enemies, [](const Enemy& e) { return e.health < GetEnemyDef(e.type).max_health; }));
+}
+
+TEST_CASE("Blades::Update: timer below interval -> does nothing", "[weapon]") {
+    World world;
+    world.player.pos = {0.f, 0.f};
+    SpawnEnemiesInBladesRadius(world);
+    Blades blades;
+    constexpr float half_interval = Blades::kFireInterval / 2.f;
+    MakeBladesActive(world, blades);
+
+    blades.Update(world, half_interval);
+
+    CHECK_FALSE(std::ranges::any_of(world.enemies, [](const Enemy& e) { return e.health < GetEnemyDef(e.type).max_health; }));
 }
 
 TEST_CASE("DamageEnemy: hit drops enemy health to exactly 0 -> enemy dies", "[enemy]") {
