@@ -31,12 +31,13 @@ FetchContent_MakeAvailable(Catch2)
 if (MSVC)
     set(SURVIVOR_WARNINGS /W4 /utf-8)
 else()
-    set(SURVIVOR_WARNINGS -Wall -Wextra -Wpedantic)
+    set(SURVIVOR_WARNINGS -Wall -Wextra -Wpedantic -Wnon-virtual-dtor)
 endif()
 
 # --- логика игры: библиотека, её подключают игра и тесты ---
 add_library(survivor_core STATIC
         src/world.h src/world.cpp
+        src/weapon.h src/weapon.cpp
         src/update.h src/update.cpp)
 target_link_libraries(survivor_core PUBLIC raylib)   # PUBLIC: world.h включает raylib.h
 target_include_directories(survivor_core PUBLIC src)

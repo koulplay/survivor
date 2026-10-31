@@ -69,8 +69,9 @@ void Draw(const World &world) {
         DrawRectangleRec(world.player.rect(), RAYWHITE);
     }
 
-    DrawCircleLinesV(world.player.pos, world.player.aura_radius, GOLD);
-
+    for (auto &w : world.player.weapons) {
+        w->Draw(world);
+    }
     for (const auto &e: world.enemies) {
         const EnemyDef &e_def = GetEnemyDef(e.type);
         if (e.hit_flash_time > 0.f) {
@@ -80,18 +81,14 @@ void Draw(const World &world) {
             DrawCircleV(e.pos, e_def.radius, e_def.color);
         }
     }
-    for (const auto &b: world.bullets) {
-        DrawCircleV(b.pos, world.player.bullet_radius, YELLOW);
-    }
-    for (const auto &exp: world.exps) {
-        DrawCircleV(exp.pos, kExpRadius, SKYBLUE);
-    }
-
     for (const auto &dp: world.damage_popups) {
         const std::string damage_popup_text = std::format("{:.1f}", dp.damage);
         DrawText(damage_popup_text.c_str(), dp.pos.x - MeasureText(damage_popup_text.c_str(), 15) / 2,
                  dp.pos.y - GetEnemyDef(dp.enemy_type).radius - 15, 15,
                  Fade(GetEnemyDef(dp.enemy_type).color, (dp.age / dp.lifetime - 1) * -1));
+    }
+    for (const auto &exp: world.exps) {
+        DrawCircleV(exp.pos, kExpRadius, SKYBLUE);
     }
 
     EndMode2D();

@@ -1,10 +1,13 @@
 #pragma once
 
+#include "weapon.h"
+
 #include <raylib.h>
 #include <vector>
 #include <array>
 #include <optional>
 #include <random>
+#include <memory>
 
 constexpr int kScreenWidth = 1280;
 constexpr int kScreenHeight = 720;
@@ -24,14 +27,10 @@ constexpr float kCardWidth = 300.f;
 constexpr float kCardHeight = 500.f;
 constexpr float kCardGap = 50.f;
 
-constexpr float kUpgradeFireInterval = 0.2f;
 constexpr float kUpgradeMoveSpeed = 10.f;
-constexpr float kUpgradeBulletSpeed = 25.f;
 constexpr float kUpgradeMagnet = 5.f;
 constexpr float kUpgradeMaxHealth = 5.f;
 constexpr float kUpgradeRestoreHealth = 25.f;
-
-constexpr float kPlayerBulletMaxLifetime = 10.f;
 
 constexpr float kDamagePopupSpeed = 10.f;
 constexpr float kEnemyFlashDuration = 0.05f;
@@ -84,33 +83,20 @@ struct Exp {
     bool dead = false;
 };
 
-struct Bullet {
-    Vector2 pos;
-    Vector2 vel;
-    float age = 0.f;
-    bool dead = false;
-};
-
 struct Player {
-    float size = 32.f;
-    float speed = 150.f;
-    float bullet_radius = 3.f;
-    float bullet_speed = 300.f;
-    float bullet_damage = 5.f;
-    float bullet_fire_interval = 2.f;
-    float bullet_shot_timer = 0.f;
-
-    float aura_damage = 2.f;
-    float aura_radius = 100.f;
-    float aura_fire_interval = 0.7f;
-    float aura_shot_timer = 0.f;
-
     Vector2 pos{kScreenWidth / 2.f, kScreenHeight / 2.f};
     float health = 100.f;
     float max_health = 100.f;
+    float size = 32.f;
+    float speed = 150.f;
     float magnet_radius = 60.f;
 
+    float bullet_speed_upgrade = 0.f;
+    float bullet_fire_interval_upgrade = 0.f;
+
     float invulnerability_timer = 0.f;
+
+    std::vector<std::unique_ptr<Weapon>> weapons = StartingWeapons();
 
     [[nodiscard]] Rectangle rect() const {
         return {pos.x - size / 2, pos.y - size / 2, size, size};
@@ -173,7 +159,6 @@ struct World {
 
     Player player;
     std::vector<Enemy> enemies;
-    std::vector<Bullet> bullets;
     std::vector<Exp> exps;
     std::vector<DamagePopup> damage_popups;
 
