@@ -13,6 +13,22 @@ constexpr float kUpgradeBulletSpeed = 25.f;
 
 struct World;
 
+struct PistolLevel {
+    float damage = 0.f;
+    float speed = 0.f;
+    float fire_interval = 0.f;
+    std::size_t bullet_count = 0;
+};
+
+constexpr PistolLevel kPistolUpgrades[] = {
+    { .damage = 5.f,  .speed = 300.f, .fire_interval = 2.f,  .bullet_count = 1 },
+    { .damage = 7.f,  .speed = 300.f, .fire_interval = 1.8f, .bullet_count = 1 },
+    { .damage = 7.f,  .speed = 300.f, .fire_interval = 1.8f, .bullet_count = 2 },
+    { .damage = 10.f, .speed = 500.f, .fire_interval = 1.4f, .bullet_count = 2 },
+    { .damage = 10.f, .speed = 500.f, .fire_interval = 1.2f, .bullet_count = 3 },
+    { .damage = 15.f, .speed = 500.f, .fire_interval = 1.2f, .bullet_count = 4 },
+};
+
 class Cooldown {
 public:
     [[nodiscard]] bool Tick(const float interval, const float dt); // Возвращает false если выполняет условие (timer < interval). Если условие не выполняется - интервал списывается, сдача остаётся
@@ -43,16 +59,13 @@ public:
 
     [[nodiscard]] const std::vector<Bullet>& GetBullets() const;
 
-    static constexpr float kFireInterval = 2.f;
-
 private:
     void UpdateBullets(World &world, const float dt);
     void ApplyDamage(World &world);
 
     std::vector<Bullet> bullets;
 
-    float damage = 5.f;
-    float speed = 300.f;
+    std::size_t level = 0;
     float radius = 3.f;
     Cooldown cooldown;
 };
