@@ -35,7 +35,7 @@ public:
     void HoldReady(const float interval);
 
 private:
-    float timer = 0.f;
+    float timer_ = 0.f;
 };
 
 class Weapon {
@@ -63,11 +63,11 @@ private:
     void UpdateBullets(World &world, const float dt);
     void ApplyDamage(World &world);
 
-    std::vector<Bullet> bullets;
+    std::vector<Bullet> bullets_;
 
-    std::size_t level = 0;
-    float radius = 3.f;
-    Cooldown cooldown;
+    std::size_t level_ = 0;
+    float radius_ = 3.f;
+    Cooldown cooldown_;
 };
 
 class Aura : public Weapon {
@@ -80,9 +80,9 @@ public:
 private:
     void ApplyDamage(World &world);
 
-    float damage = 2.f;
-    float radius = 100.f;
-    Cooldown cooldown;
+    float damage_ = 2.f;
+    float radius_ = 100.f;
+    Cooldown cooldown_;
 };
 
 class Blades : public Weapon {
@@ -101,15 +101,15 @@ private:
     [[nodiscard]] bool TrySpawnBlades(const float dt);
     void ApplyDamage(World &world);
 
-    std::vector<Vector2> blades_pos;
-    float angle = 0.f;
-    float damage = 2.f;
-    float blade_radius = 7.f;
-    std::size_t count = 1;
-    static constexpr float rotate_speed = 75.f;
-    Cooldown cooldown_spawn;
-    Cooldown cooldown_hit;
-    bool active = false;
+    std::vector<Vector2> blades_pos_;
+    float angle_ = 0.f;
+    float damage_ = 2.f;
+    float blade_radius_ = 7.f;
+    std::size_t count_ = 1;
+    static constexpr float rotate_speed_ = 75.f;
+    Cooldown cooldown_spawn_;
+    Cooldown cooldown_hit_;
+    bool active_ = false;
 };
 
 [[nodiscard]] std::vector<std::unique_ptr<Weapon>> StartingWeapons();
