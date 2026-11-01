@@ -51,8 +51,8 @@ public:
 
 struct Bullet {
     Vector2 pos;
-    Vector2 vel;
-    float max_range_ = 800.f;
+    Vector2 dir;
+    float speed = 0.f;
     float age = 0.f;
     bool dead = false;
 };
@@ -65,7 +65,7 @@ public:
     [[nodiscard]] WeaponId GetId() const override;
     [[nodiscard]] const std::vector<Bullet>& GetBullets() const;
 
-    static constexpr  PistolLevel kPistolLevels[] = {
+    static constexpr PistolLevel kPistolLevels[] = {
         { .damage = 5.f,  .speed = 300.f, .fire_interval = 2.f,  .bullet_count = 1 },
         { .damage = 7.f,  .speed = 300.f, .fire_interval = 1.8f, .bullet_count = 1 },
         { .damage = 7.f,  .speed = 300.f, .fire_interval = 1.8f, .bullet_count = 2 },
@@ -74,6 +74,7 @@ public:
         { .damage = 15.f, .speed = 500.f, .fire_interval = 1.2f, .bullet_count = 4 }
     };
 
+    static constexpr float max_range_ = 800.f;
 private:
     void UpdateBullets(World &world, const float dt);
     void ApplyDamage(World &world);

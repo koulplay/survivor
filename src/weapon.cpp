@@ -9,19 +9,19 @@
 
 
 namespace {
-[[nodiscard]] bool ShouldDieByLifetime(const Bullet &b, const float speed) {
-    return b.age >= b.max_range_ / speed;
+[[nodiscard]] bool ShouldDieByLifetime(const Bullet &b) {
+    return b.age >= Pistol::max_range_ / b.speed;
 }
 
-void MarkBulletByLifetime(Bullet &b, const float speed) {
-    if (ShouldDieByLifetime(b, speed)) {
+void MarkBulletByLifetime(Bullet &b) {
+    if (ShouldDieByLifetime(b)) {
         b.dead = true;
     }
 }
 
 void MoveBullet(Bullet &b, const float dt) {
     b.age += dt;
-    b.pos += b.vel * dt;
+    b.pos += b.dir * b.speed * dt;
 }
 }
 
@@ -37,7 +37,7 @@ void Cooldown::HoldReady(const float interval) {
 
 void Pistol::UpdateBullets(World &world, const float dt) {
     for (auto &b: bullets_) {
-        MarkBulletByLifetime(b, kPistolLevels[level_].speed);
+        MarkBulletByLifetime(b);
         MoveBullet(b, dt);
     }
     const float interval = kPistolLevels[level_].fire_interval;
@@ -48,7 +48,7 @@ void Pistol::UpdateBullets(World &world, const float dt) {
         cooldown_.HoldReady(interval);
         return;
     }
-    bullets_.push_back({world.player.pos, Vector2Normalize(*target - world.player.pos) * kPistolLevels[level_].speed});
+    bullets_.push_back({world.player.pos, Vector2Normalize(*target - world.player.pos), kPistolLevels[level_].speed});
 }
 
 void Pistol::ApplyDamage(World &world) {
