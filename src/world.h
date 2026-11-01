@@ -29,11 +29,6 @@ constexpr float kCardWidth = 300.f;
 constexpr float kCardHeight = 500.f;
 constexpr float kCardGap = 50.f;
 
-constexpr float kUpgradeMoveSpeed = 10.f;
-constexpr float kUpgradeMagnet = 5.f;
-constexpr float kUpgradeMaxHealth = 5.f;
-constexpr float kUpgradeRestoreHealth = 25.f;
-
 constexpr float kDamagePopupSpeed = 10.f;
 constexpr float kEnemyFlashDuration = 0.05f;
 

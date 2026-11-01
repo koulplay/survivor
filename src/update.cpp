@@ -165,6 +165,8 @@ void UpdateDamagePopups(World &world, const float dt) {
 
 void FillLevelUpMenu(World &world) {
     std::array<Upgrade, static_cast<int>(Upgrade::Count)> all{};
+
+
     for (int i = 0; i < static_cast<int>(all.size()); ++i) all[i] = static_cast<Upgrade>(i);
     std::shuffle(all.begin(), all.end(), world.rng);
     for (int i = 0; i < 3; ++i) world.level_up_menu.options[i] = all[i];
@@ -193,7 +195,7 @@ void CreateDamagePopupMessage(World &world, const Vector2 pos, const Vector2 vel
     });
 }
 
-void OnEnemyDead(World &world, const Enemy& e) {
+void OnEnemyDeath(World &world, const Enemy& e) {
         const EnemyDef &e_def = GetEnemyDef(e.type);
         if (e_def.exp) {
             world.exps.push_back({e.pos, e_def.exp});
@@ -203,7 +205,7 @@ void OnEnemyDead(World &world, const Enemy& e) {
         }
 }
 
-void ApplyLevelUp(const Player &player, const WeaponId id) {
+void ApplyLevelUp(Player &player, const WeaponId id) {
     for (auto &w : player.weapons) {
         if (w->GetId() == id) {
             w->LevelUp();
@@ -221,7 +223,7 @@ void DamageEnemy(World &world, Enemy &e, const float damage) {
     e.health -= damage;
     if (e.health <= 0) {
         e.dead = true;
-        OnEnemyDead(world, e);
+        OnEnemyDeath(world, e);
     }
 }
 
@@ -230,8 +232,8 @@ void DamageEnemy(World &world, Enemy &e, const float damage) {
         return std::nullopt;
     }
 
-    float best_distance = Vector2Distance(world.player.pos, world.enemies[0].pos);
     Vector2 nearest_pos = world.enemies[0].pos;
+    float best_distance = Vector2Distance(world.player.pos, world.enemies[0].pos);
     for (auto &e: world.enemies) {
         const float new_distance = Vector2Distance(world.player.pos, e.pos);
         if (new_distance < best_distance) {

@@ -45,8 +45,6 @@ public:
     virtual WeaponId GetId() const = 0;
 
     virtual ~Weapon() = default;
-
-    static constexpr float kBulletMinFireInterval = 0.1f;
 };
 
 struct Bullet {
