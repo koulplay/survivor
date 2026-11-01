@@ -80,7 +80,6 @@ private:
 
     std::vector<Bullet> bullets_;
 
-    WeaponId id_ = WeaponId::Pistol;
     std::size_t level_ = 0;
     float radius_ = 3.f;
     Cooldown cooldown_;
@@ -106,7 +105,6 @@ public:
 private:
     void ApplyDamage(World &world);
 
-    WeaponId id_ = WeaponId::Aura;
     std::size_t level_ = 0;
     Cooldown cooldown_;
 };
@@ -139,7 +137,6 @@ private:
 
     std::vector<Vector2> blades_pos_;
 
-    WeaponId id_ = WeaponId::Blades;
     float angle_ = 0.f;
     float blade_radius_ = 7.f;
     static constexpr float rotate_speed_ = 75.f;

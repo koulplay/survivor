@@ -79,7 +79,7 @@ void Pistol::LevelUp() {
 }
 
 WeaponId Pistol::GetId() const {
-    return id_;
+    return WeaponId::Pistol;
 }
 
 void Aura::ApplyDamage(World &world) {
@@ -100,7 +100,7 @@ void Aura::LevelUp() {
 }
 
 WeaponId Aura::GetId() const {
-    return id_;
+    return WeaponId::Aura;
 }
 
 void Blades::UpdateBlades(World &world, const float dt) {
@@ -146,7 +146,7 @@ void Blades::LevelUp() {
 }
 
 WeaponId Blades::GetId() const {
-    return id_;
+    return WeaponId::Blades;
 }
 
 bool Blades::IsActive() const {
