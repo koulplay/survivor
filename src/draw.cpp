@@ -1,10 +1,11 @@
+#include "draw.h"
+
+#include "world.h"
+
+#include <cmath>
 #include <string>
 #include <algorithm>
-#include <cmath>
 #include <format>
-
-#include "draw.h"
-#include "world.h"
 
 
 namespace {

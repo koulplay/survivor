@@ -3,11 +3,13 @@
 #include "weapon.h"
 
 #include <raylib.h>
+
 #include <vector>
 #include <array>
 #include <optional>
 #include <random>
 #include <memory>
+
 
 constexpr int kScreenWidth = 1280;
 constexpr int kScreenHeight = 720;

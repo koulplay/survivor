@@ -1,15 +1,17 @@
 #include "update.h"
+
 #include "weapon.h"
 #include "world.h"
 
 #include <raylib.h>
 #include <raymath.h>
-#include <algorithm>
-#include <array>
+
 #include <cassert>
+#include <array>
+#include <string>
+#include <algorithm>
 #include <optional>
 #include <random>
-#include <string>
 
 
 namespace {

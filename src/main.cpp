@@ -1,9 +1,10 @@
-#include <raylib.h>
-#include <raymath.h>
-
 #include "world.h"
 #include "update.h"
 #include "draw.h"
+
+#include <raylib.h>
+#include <raymath.h>
+
 
 void ReadInput(Input &input) {
     if (IsKeyDown(KEY_UP) || IsKeyDown(KEY_W)) input.down.player_move_up = true;

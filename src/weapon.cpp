@@ -1,10 +1,12 @@
 #include "weapon.h"
+
 #include "update.h"
 #include "world.h"
 
+#include <cmath>
 #include <raylib.h>
 #include <raymath.h>
-#include <cmath>
+
 
 namespace {
 [[nodiscard]] bool ShouldDieByLifetime(const Bullet &b, const float speed) {
