@@ -191,7 +191,7 @@ void CreateDamagePopupMessage(World &world, const Vector2 pos, const Vector2 vel
     });
 }
 
-void EnemyDead(World &world, const Enemy& e) {
+void OnEnemyDead(World &world, const Enemy& e) {
         const EnemyDef &e_def = GetEnemyDef(e.type);
         if (e_def.exp) {
             world.exps.push_back({e.pos, e_def.exp});
@@ -199,6 +199,15 @@ void EnemyDead(World &world, const Enemy& e) {
         if (e.type == EnemyType::Splitter) {
             OnSplitterDeath(world, e);
         }
+}
+
+void ApplyLevelUp(const Player &player, const WeaponId id) {
+    for (auto &w : player.weapons) {
+        if (w->GetId() == id) {
+            w->LevelUp();
+            return;
+        }
+    }
 }
 }
 
@@ -210,7 +219,7 @@ void DamageEnemy(World &world, Enemy &e, const float damage) {
     e.health -= damage;
     if (e.health <= 0) {
         e.dead = true;
-        EnemyDead(world, e);
+        OnEnemyDead(world, e);
     }
 }
 
@@ -268,25 +277,18 @@ void Update(World &world, const Input& input) {
     std::erase_if(world.damage_popups, [](const DamagePopup &dp) { return dp.dead; });
 }
 
- void ApplyUpgrade(Player &p, Upgrade u) {
-     // только изменение
-     switch (u) {
-         case Upgrade::FireInterval: p.bullet_fire_interval_upgrade += kUpgradeFireInterval;
-             break;
-         case Upgrade::MoveSpeed: p.speed += kUpgradeMoveSpeed;
-             break;
-         case Upgrade::BulletSpeed: p.bullet_speed_upgrade += kUpgradeBulletSpeed;
-             break;
-         case Upgrade::Magnet: p.magnet_radius += kUpgradeMagnet;
-             break;
-         case Upgrade::MaxHealth: p.max_health += kUpgradeMaxHealth;
-             p.health += kUpgradeMaxHealth;
-             break;
-         case Upgrade::RestoreHealth: p.health = std::min(p.health + kUpgradeRestoreHealth, p.max_health);
-             break;
-         case Upgrade::Count: break;
-     }
- }
+void ApplyUpgrade(Player &p, Upgrade u) {
+    // только изменение
+    switch (u) {
+        case Upgrade::Pistol: ApplyLevelUp(p, WeaponId::Pistol);
+            break;
+        case Upgrade::Aura: ApplyLevelUp(p, WeaponId::Aura);
+            break;
+        case Upgrade::Blades: ApplyLevelUp(p, WeaponId::Blades);
+            break;
+        case Upgrade::Count: break;
+    }
+}
 
 bool UpdateLevelUp(World &world, const Input &input) {
     auto &m = world.level_up_menu;

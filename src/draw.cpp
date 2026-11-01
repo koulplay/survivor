@@ -14,12 +14,9 @@ namespace {
 
 [[nodiscard]] std::string UpgradeName(Upgrade u) {
     switch (u) {
-        case Upgrade::FireInterval: return std::format("Shot Interval -{:.1f}/s", kUpgradeFireInterval);
-        case Upgrade::MoveSpeed: return std::format("MoveSpeed +{:.1f}/s", kUpgradeMoveSpeed);
-        case Upgrade::BulletSpeed: return std::format("BulletSpeed +{:.1f}/s", kUpgradeBulletSpeed);
-        case Upgrade::Magnet: return std::format("Magnet +{:.1f}/s", kUpgradeMagnet);
-        case Upgrade::MaxHealth: return std::format("MaxHealth +{:.1f}/s", kUpgradeMaxHealth);
-        case Upgrade::RestoreHealth: return std::format("RestoreHealth +{:.1f}", kUpgradeRestoreHealth);
+        case Upgrade::Pistol: return std::format("Pistol +1");
+        case Upgrade::Aura: return std::format("Aura +1");
+        case Upgrade::Blades: return std::format("Blades +1");
         case Upgrade::Count: break;
     }
     return "?";

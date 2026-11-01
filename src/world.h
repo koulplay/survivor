@@ -46,7 +46,7 @@ constexpr float kSeparationSpeedFactor = 5.f;
 
 enum class GameState { Playing, LevelUp, GameOver };
 
-enum class Upgrade { FireInterval, MoveSpeed, BulletSpeed, Magnet, MaxHealth, RestoreHealth, Count };
+enum class Upgrade { Pistol, Aura, Blades, Count };
 
 enum class EnemyType { Light, Medium, Heavy, Splitter, Twin, Count };
 

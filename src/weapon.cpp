@@ -7,12 +7,12 @@
 #include <cmath>
 
 namespace {
-[[nodiscard]] bool ShouldDieByLifetime(const Bullet &b) {
-    return b.age >= kBulletMaxLifetime;
+[[nodiscard]] bool ShouldDieByLifetime(const Bullet &b, const float speed) {
+    return b.age >= b.max_range_ / speed;
 }
 
-void DeleteBulletByLifetime(Bullet &b) {
-    if (ShouldDieByLifetime(b)) {
+void MarkBulletByLifetime(Bullet &b, const float speed) {
+    if (ShouldDieByLifetime(b, speed)) {
         b.dead = true;
     }
 }
@@ -35,10 +35,10 @@ void Cooldown::HoldReady(const float interval) {
 
 void Pistol::UpdateBullets(World &world, const float dt) {
     for (auto &b: bullets_) {
-        DeleteBulletByLifetime(b);
+        MarkBulletByLifetime(b, kPistolLevels[level_].speed);
         MoveBullet(b, dt);
     }
-    const float interval = std::max(kBulletMinFireInterval, kFireInterval - world.player.bullet_fire_interval_upgrade);
+    const float interval = kPistolLevels[level_].fire_interval;
     if (!cooldown_.Tick(interval, dt)) return;
 
     const std::optional<Vector2> target = NearestEnemyPos(world);
@@ -46,7 +46,7 @@ void Pistol::UpdateBullets(World &world, const float dt) {
         cooldown_.HoldReady(interval);
         return;
     }
-    bullets_.push_back({world.player.pos, Vector2Normalize(*target - world.player.pos) * (speed + world.player.bullet_speed_upgrade)});
+    bullets_.push_back({world.player.pos, Vector2Normalize(*target - world.player.pos) * kPistolLevels[level_].speed});
 }
 
 void Pistol::ApplyDamage(World &world) {
@@ -55,7 +55,7 @@ void Pistol::ApplyDamage(World &world) {
             if (e.dead) break;
             if (b.dead) continue;
             if (CheckCollisionCircles(b.pos, radius_, e.pos, GetEnemyDef(e.type).radius)) {
-                DamageEnemy(world, e, damage);
+                DamageEnemy(world, e, kPistolLevels[level_].damage);
                 b.dead = true;
             }
         }
@@ -72,10 +72,18 @@ void Pistol::Update(World &world, const float dt) {
     std::erase_if(bullets_, [](const Bullet &b) { return b.dead; });
 }
 
+void Pistol::LevelUp() {
+    ++level_;
+}
+
+WeaponId Pistol::GetId() const {
+    return id_;
+}
+
 void Aura::ApplyDamage(World &world) {
     for (auto &e: world.enemies) {
-        if (CheckCollisionCircles(world.player.pos, radius_, e.pos, GetEnemyDef(e.type).radius)) {
-            DamageEnemy(world, e, damage_);
+        if (CheckCollisionCircles(world.player.pos, kAuraLevels[level_].radius, e.pos, GetEnemyDef(e.type).radius)) {
+            DamageEnemy(world, e, kAuraLevels[level_].damage);
         }
     }
 }
@@ -85,10 +93,18 @@ void Aura::Update(World &world, const float dt) {
     ApplyDamage(world);
 }
 
+void Aura::LevelUp() {
+    ++level_;
+}
+
+WeaponId Aura::GetId() const {
+    return id_;
+}
+
 void Blades::UpdateBlades(World &world, const float dt) {
     angle_ += rotate_speed_ * dt;
-    float step = 360.f / static_cast<float>(count_);
-    for (std::size_t i = 0; i < count_; ++i) {
+    float step = 360.f / static_cast<float>(kBladesLevels[level_].count);
+    for (std::size_t i = 0; i < kBladesLevels[level_].count; ++i) {
         float angle_rad = (angle_ + step * i) * DEG2RAD;
         float cos_rad = std::cos(angle_rad);
         float sin_rad = std::sin(angle_rad);
@@ -109,7 +125,7 @@ void Blades::ApplyDamage(World &world) {
     for (auto &e: world.enemies) {
         for (auto &pos: blades_pos_) {
             if (CheckCollisionCircles(pos, blade_radius_, e.pos, GetEnemyDef(e.type).radius)) {
-                DamageEnemy(world, e, damage_);
+                DamageEnemy(world, e, kBladesLevels[level_].damage);
             }
         }
     }
@@ -123,6 +139,14 @@ void Blades::Update(World &world, const float dt) {
     ApplyDamage(world);
 }
 
+void Blades::LevelUp() {
+    ++level_;
+}
+
+WeaponId Blades::GetId() const {
+    return id_;
+}
+
 bool Blades::IsActive() const {
     return active_;
 }
@@ -134,7 +158,7 @@ void Pistol::Draw(const World &) const {
 }
 
 void Aura::Draw(const World &world) const {
-    DrawCircleLinesV(world.player.pos, radius_, GOLD);
+    DrawCircleLinesV(world.player.pos, kAuraLevels[level_].radius, GOLD);
 }
 
 void Blades::Draw(const World &) const {
