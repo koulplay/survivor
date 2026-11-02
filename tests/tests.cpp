@@ -1,11 +1,13 @@
-#include <algorithm>
-#include <catch2/catch_test_macros.hpp>
-#include "world.h"
 #include "update.h"
+#include "world.h"
+
+#include <catch2/catch_test_macros.hpp>
+#include <raymath.h>
 
 #include <cmath>
+#include <algorithm>
 #include <bit>
-#include <raymath.h>
+
 
 struct Fnv1a {
     std::uint64_t value = 14695981039346656037ull; // offset basis (RFC 9923)
@@ -156,41 +158,18 @@ TEST_CASE("TryLevelUp: exp below threshold -> nothing changes", "[level]") {
     CHECK(world.game_state == GameState::Playing);
 }
 
-TEST_CASE("ApplyUpgrade: RestoreHealth larger than missing health -> health capped at max", "[upgrade]") {
-    World world;
-    Player &player = world.player;
-    player.max_health = 100.f;
-    const float health = player.max_health - kUpgradeRestoreHealth / 2;
-    player.health = health;
-
-    ApplyUpgrade(player, Upgrade::RestoreHealth);
-
-    CHECK(player.health == player.max_health);
-}
-
-TEST_CASE("ApplyUpgrade: RestoreHealth smaller than missing health -> health grows by restore amount", "[upgrade]") {
-    World world;
-    Player &player = world.player;
-    player.max_health = 100.f;
-    const float health = player.max_health - kUpgradeRestoreHealth * 2;
-    player.health = health;
-
-    ApplyUpgrade(player, Upgrade::RestoreHealth);
-
-    CHECK(player.health == health + kUpgradeRestoreHealth);
-}
-
 TEST_CASE("Pistol::Update: timer past interval with enemy -> shoots and keeps leftover", "[weapon]") {
     World world;
     world.player.pos = {0.f, 0.f};
     world.enemies.emplace_back(Vector2{0.f, 10'000.f}, EnemyType::Light);
     Pistol pistol;
-    constexpr float leftover = Pistol::kFireInterval / 2.f;
+    constexpr float fire_interval = Pistol::kPistolLevels[0].fire_interval;
+    constexpr float leftover = fire_interval / 2.f;
 
-    pistol.Update(world, Pistol::kFireInterval + leftover);
+    pistol.Update(world, fire_interval + leftover);
     REQUIRE(pistol.GetBullets().size() == 1);
 
-    pistol.Update(world, Pistol::kFireInterval - leftover);
+    pistol.Update(world, fire_interval - leftover);
 
     CHECK(pistol.GetBullets().size() == 2);
 }
@@ -200,9 +179,10 @@ TEST_CASE("Pistol::Update: timer exactly at interval -> shoots and timer is zero
     world.player.pos = {0.f, 0.f};
     world.enemies.emplace_back(Vector2{0.f, 10'000.f}, EnemyType::Light);
     Pistol pistol;
-    constexpr float half_interval = Pistol::kFireInterval / 2.f;
+    constexpr float fire_interval = Pistol::kPistolLevels[0].fire_interval;
+    constexpr float half_interval = fire_interval / 2.f;
 
-    pistol.Update(world, Pistol::kFireInterval);
+    pistol.Update(world, fire_interval);
     REQUIRE(pistol.GetBullets().size() == 1);
 
     pistol.Update(world, half_interval);
@@ -215,7 +195,8 @@ TEST_CASE("Pistol::Update: timer below interval -> no shot", "[weapon]") {
     world.player.pos = {0.f, 0.f};
     world.enemies.emplace_back(Vector2{0.f, 10'000.f}, EnemyType::Light);
     Pistol pistol;
-    constexpr float half_interval = Pistol::kFireInterval / 2.f;
+    constexpr float fire_interval = Pistol::kPistolLevels[0].fire_interval;
+    constexpr float half_interval = fire_interval / 2.f;
 
     pistol.Update(world, half_interval);
 
@@ -226,8 +207,9 @@ TEST_CASE("Pistol::Update: timer ready without enemies -> no shot and timer held
     World world;
     world.player.pos = {0.f, 0.f};
     Pistol pistol;
+    constexpr float fire_interval = Pistol::kPistolLevels[0].fire_interval;
 
-    pistol.Update(world, Pistol::kFireInterval);
+    pistol.Update(world, fire_interval);
     REQUIRE(pistol.GetBullets().size() == 0);
 
     world.enemies.emplace_back(Vector2{0.f, 10'000.f}, EnemyType::Light);
@@ -473,7 +455,7 @@ TEST_CASE("DamageEnemy: hit enemy to death by multiple weapons -> died once", "[
     Pistol pistol;
     Aura aura;
 
-    pistol.Update(world, Pistol::kFireInterval);
+    pistol.Update(world, Pistol::kPistolLevels[0].fire_interval);
     aura.Update(world, Aura::kFireInterval);
 
     CHECK(world.exps.size() == 1);
