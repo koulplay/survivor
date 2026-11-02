@@ -32,6 +32,7 @@ public:
     // Возвращает false если выполняет условие (timer < interval). Если условие не выполняется - интервал списывается, сдача остаётся
     [[nodiscard]] bool Tick(const float interval, const float dt);
     void HoldReady(const float interval);
+    void Reset();
 
 private:
     float timer_ = 0.f;
@@ -72,16 +73,23 @@ public:
         { .damage = 15.f, .speed = 500.f, .fire_interval = 1.2f, .bullet_count = 4 }
     };
 
-    static constexpr float max_range_ = 800.f;
+    static constexpr float kmaxRange = 800.f;
+    static constexpr float kBurstInterval = 0.2f;
 private:
     void UpdateBullets(World &world, const float dt);
     void ApplyDamage(World &world);
+    void MakeShot(World &world, const float interval);
+
+    enum class State {Reload, Fire};
 
     std::vector<Bullet> bullets_;
 
     std::size_t level_ = 0;
     float radius_ = 3.f;
-    Cooldown cooldown_;
+    Cooldown fire_cooldown_;
+    Cooldown burst_shot_cooldown_;
+    State state_ = State::Reload;
+    std::size_t shots_fired_ = 0;
 };
 
 class Aura : public Weapon {
