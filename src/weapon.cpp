@@ -39,14 +39,26 @@ void Cooldown::Reset() {
     timer_ = 0.f;
 }
 
-void Pistol::MakeShot(World &world, const float interval) {
+void Pistol::Fire(World &world) {
     const std::optional<Vector2> target = NearestEnemyPos(world);
     if (!target) {
-        burst_shot_cooldown_.HoldReady(interval);
+        fire_cooldown_.HoldReady(kPistolLevels[level_].fire_interval);
         return;
     }
     bullets_.push_back({world.player.pos, Vector2Normalize(*target - world.player.pos), kPistolLevels[level_].speed});
-    ++shots_fired_;
+    --shots_left_;
+}
+
+void Pistol::UpdateShooting(World &world, const float dt) {
+    if (shots_left_ == 0) {
+        if (!fire_cooldown_.Tick(kPistolLevels[level_].fire_interval, dt)) return;
+        shots_left_ = kPistolLevels[level_].bullet_count;
+        burst_shot_cooldown_.Reset();
+        Fire(world);
+    }
+    else if (burst_shot_cooldown_.Tick(kBurstInterval, dt)) {
+        Fire(world);
+    }
 }
 
 void Pistol::UpdateBullets(World &world, const float dt) {
@@ -54,27 +66,7 @@ void Pistol::UpdateBullets(World &world, const float dt) {
         MoveBullet(b, dt);
         MarkBulletByLifetime(b);
     }
-
-    float interval = 0.f;
-    switch (state_) {
-        case State::Reload:
-            interval = kPistolLevels[level_].fire_interval;
-            if (!fire_cooldown_.Tick(interval, dt)) return;
-
-            state_ = State::Fire;
-            shots_fired_ = 0;
-            burst_shot_cooldown_.Reset();
-            [[fallthrough]];
-        case State::Fire:
-            interval = kBurstInterval;
-            if (shots_fired_ < kPistolLevels[level_].bullet_count) {
-                if (shots_fired_ == 0 || burst_shot_cooldown_.Tick(interval, dt)) {
-                    MakeShot(world, interval);
-                }
-            }
-            if (shots_fired_ == kPistolLevels[level_].bullet_count) state_ = State::Reload;
-            break;
-    }
+    UpdateShooting(world, dt);
 }
 
 void Pistol::ApplyDamage(World &world) {

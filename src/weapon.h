@@ -78,9 +78,8 @@ public:
 private:
     void UpdateBullets(World &world, const float dt);
     void ApplyDamage(World &world);
-    void MakeShot(World &world, const float interval);
-
-    enum class State {Reload, Fire};
+    void Fire(World &world);
+    void UpdateShooting(World &world, const float dt);
 
     std::vector<Bullet> bullets_;
 
@@ -88,8 +87,7 @@ private:
     float radius_ = 3.f;
     Cooldown fire_cooldown_;
     Cooldown burst_shot_cooldown_;
-    State state_ = State::Reload;
-    std::size_t shots_fired_ = 0;
+    std::size_t shots_left_ = 0;
 };
 
 class Aura : public Weapon {
