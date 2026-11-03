@@ -161,7 +161,7 @@ TEST_CASE("Pistol::Update: timer past interval with enemy -> shoots and keeps le
     world.player.pos = {0.f, 0.f};
     world.enemies.emplace_back(Vector2{0.f, 10'000.f}, EnemyType::Light);
     Pistol pistol;
-    constexpr float fire_interval = Pistol::kPistolLevels[0].fire_interval;
+    constexpr float fire_interval = Pistol::kPistolLevels[0].reload_time;
     constexpr float leftover = fire_interval / 2.f;
 
     pistol.Update(world, fire_interval + leftover);
@@ -177,7 +177,7 @@ TEST_CASE("Pistol::Update: timer exactly at interval -> shoots and timer is zero
     world.player.pos = {0.f, 0.f};
     world.enemies.emplace_back(Vector2{0.f, 10'000.f}, EnemyType::Light);
     Pistol pistol;
-    constexpr float fire_interval = Pistol::kPistolLevels[0].fire_interval;
+    constexpr float fire_interval = Pistol::kPistolLevels[0].reload_time;
     constexpr float half_interval = fire_interval / 2.f;
 
     pistol.Update(world, fire_interval);
@@ -193,7 +193,7 @@ TEST_CASE("Pistol::Update: timer below interval -> no shot", "[weapon]") {
     world.player.pos = {0.f, 0.f};
     world.enemies.emplace_back(Vector2{0.f, 10'000.f}, EnemyType::Light);
     Pistol pistol;
-    constexpr float fire_interval = Pistol::kPistolLevels[0].fire_interval;
+    constexpr float fire_interval = Pistol::kPistolLevels[0].reload_time;
     constexpr float half_interval = fire_interval / 2.f;
 
     pistol.Update(world, half_interval);
@@ -205,15 +205,134 @@ TEST_CASE("Pistol::Update: timer ready without enemies -> no shot and timer held
     World world;
     world.player.pos = {0.f, 0.f};
     Pistol pistol;
-    constexpr float fire_interval = Pistol::kPistolLevels[0].fire_interval;
-
-    pistol.Update(world, fire_interval);
+    constexpr float reload_time = Pistol::kPistolLevels[0].reload_time;
+    pistol.Update(world, reload_time);
     REQUIRE(pistol.GetBullets().size() == 0);
 
     world.enemies.emplace_back(Vector2{0.f, 10'000.f}, EnemyType::Light);
     pistol.Update(world, 0.f);
 
     CHECK(pistol.GetBullets().size() == 1);
+}
+
+TEST_CASE("Pistol::Update: timer ready without enemies with multiple bullets -> no burst cooldown after enemy spawn", "[weapon]") {
+    World world;
+    world.player.pos = {0.f, 0.f};
+    Pistol pistol;
+    constexpr std::size_t level_index = 2;
+    constexpr float reload_time = Pistol::kPistolLevels[level_index].reload_time;
+    for (std::size_t i = 0; i < level_index; ++i) pistol.LevelUp();
+    pistol.Update(world, reload_time);
+    REQUIRE(pistol.GetBullets().size() == 0);
+
+    world.enemies.emplace_back(Vector2{0.f, 10'000.f}, EnemyType::Light);
+    pistol.Update(world, 0.f);
+
+    CHECK(pistol.GetBullets().size() == 1);
+}
+
+TEST_CASE("Pistol::Update: queue is interrupted -> the next shot is waiting for a full reload", "[weapon]") {
+    World world;
+    world.player.pos = {0.f, 0.f};
+    world.enemies.emplace_back(Vector2{0.f, 10'000.f}, EnemyType::Light);
+    Pistol pistol;
+    constexpr std::size_t level_index = 2;
+    constexpr float reload_time = Pistol::kPistolLevels[level_index].reload_time;
+    constexpr float burst_interval = Pistol::kBurstInterval;
+    for (std::size_t i = 0; i < level_index; ++i) pistol.LevelUp();
+
+    pistol.Update(world, reload_time);
+    REQUIRE(pistol.GetBullets().size() == 1);
+
+    world.enemies.clear();
+
+    pistol.Update(world, burst_interval);
+    world.enemies.emplace_back(Vector2{0.f, 10'000.f}, EnemyType::Light);
+
+    pistol.Update(world, burst_interval);
+
+    CHECK(pistol.GetBullets().size() == 1);
+}
+
+TEST_CASE("Pistol::Update: burst starts without enemies then enemy appears -> no two shots in a row", "[weapon]") {
+    World world;
+    world.player.pos = {0.f, 0.f};
+    Pistol pistol;
+    constexpr std::size_t level_index = 2;
+    constexpr float reload_time = Pistol::kPistolLevels[level_index].reload_time;
+    constexpr float burst_interval = Pistol::kBurstInterval;
+    for (std::size_t i = 0; i < level_index; ++i) pistol.LevelUp();
+    REQUIRE(Pistol::kPistolLevels[level_index].bullet_count >= 2);
+
+    pistol.Update(world, reload_time);      // перезарядка прошла, врага нет: первая пуля очереди не вылетела
+    REQUIRE(pistol.GetBullets().size() == 0);
+
+    world.enemies.emplace_back(Vector2{0.f, 10'000.f}, EnemyType::Light);
+    pistol.Update(world, burst_interval);   // враг появился: первый выстрел
+    REQUIRE(pistol.GetBullets().size() == 1);
+
+    pistol.Update(world, kTick);            // следующий тик: второго выстрела быть не должно
+
+    CHECK(pistol.GetBullets().size() == 1);
+}
+
+TEST_CASE("Pistol::Update: timer ready without enemies with multiple bullets -> no shot and timer held at interval", "[weapon]") {
+    World world;
+    world.player.pos = {0.f, 0.f};
+    Pistol pistol;
+    constexpr std::size_t level_index = 4;
+    constexpr float reload_time = Pistol::kPistolLevels[level_index].reload_time;
+    constexpr float burst_interval = Pistol::kBurstInterval;
+    for (std::size_t i = 0; i < level_index; ++i) pistol.LevelUp();
+
+    pistol.Update(world, reload_time);
+    REQUIRE(pistol.GetBullets().size() == 0);
+
+    for (std::size_t i = 0; i < Pistol::kPistolLevels[level_index].bullet_count; ++i) pistol.Update(world, burst_interval);
+    REQUIRE(pistol.GetBullets().size() == 0);
+
+    world.enemies.emplace_back(Vector2{0.f, 10'000.f}, EnemyType::Light);
+    for (std::size_t i = 0; i < Pistol::kPistolLevels[level_index].bullet_count; ++i) pistol.Update(world, burst_interval);
+
+    CHECK(pistol.GetBullets().size() == Pistol::kPistolLevels[level_index].bullet_count);
+}
+
+TEST_CASE("Pistol::Update: after reload timer passed burst cd -> pistol shoot multiple bullets", "[weapon]") {
+    World world;
+    world.player.pos = {0.f, 0.f};
+    world.enemies.emplace_back(Vector2{0.f, 10'000.f}, EnemyType::Light);
+    Pistol pistol;
+    constexpr std::size_t level_index = 4;
+    constexpr float reload_time = Pistol::kPistolLevels[level_index].reload_time;
+    constexpr float burst_interval = Pistol::kBurstInterval;
+    for (std::size_t i = 0; i < level_index; ++i) pistol.LevelUp();
+
+    pistol.Update(world, reload_time);
+    REQUIRE(pistol.GetBullets().size() == 1);
+
+    for (std::size_t i = 0; i < Pistol::kPistolLevels[level_index].bullet_count; ++i) pistol.Update(world, burst_interval);
+    REQUIRE(pistol.GetBullets().size() == Pistol::kPistolLevels[level_index].bullet_count);
+
+    pistol.Update(world, burst_interval);
+
+    CHECK(pistol.GetBullets().size() == Pistol::kPistolLevels[level_index].bullet_count);
+}
+
+TEST_CASE("Pistol::Update: bullet distance equal enemy distance from player -> bullet travel all distance", "[weapon]") {
+    World world;
+    world.player.pos = {0.f, 0.f};
+    Enemy &enemy = world.enemies.emplace_back(Vector2{0.f, Pistol::kMaxRange}, EnemyType::Light);
+    Pistol pistol;
+    constexpr float reload_time = Pistol::kPistolLevels[0].reload_time;
+    pistol.Update(world, reload_time);
+
+    for (float time_to_reach_enemy = Pistol::kMaxRange / Pistol::kPistolLevels[0].speed;
+         time_to_reach_enemy > 0;
+         time_to_reach_enemy -= kTick) {
+        pistol.Update(world, kTick);
+    }
+
+    CHECK(enemy.health < GetEnemyDef(EnemyType::Light).max_health);
 }
 
 TEST_CASE("Aura::Update: timer past interval -> aura triggers and keeps leftover", "[weapon]") {
@@ -453,7 +572,7 @@ TEST_CASE("DamageEnemy: hit enemy to death by multiple weapons -> died once", "[
     Pistol pistol;
     Aura aura;
 
-    pistol.Update(world, Pistol::kPistolLevels[0].fire_interval);
+    pistol.Update(world, Pistol::kPistolLevels[0].reload_time);
     aura.Update(world, Aura::kFireInterval);
 
     CHECK(world.exps.size() == 1);
