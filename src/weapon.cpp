@@ -48,7 +48,6 @@ void Pistol::Fire(World &world) {
     const std::optional<Vector2> target = NearestEnemyPos(world);
     if (!target) {
         fire_cooldown_.HoldReady(kPistolLevels[level_].fire_interval);
-
         return;
     }
     bullets_.push_back({world.player.pos, Vector2Normalize(*target - world.player.pos), kPistolLevels[level_].speed});
@@ -66,12 +65,11 @@ void Pistol::UpdateShooting(World &world, const float dt) {
     }
 }
 
-void Pistol::UpdateBullets(World &world, const float dt) {
+void Pistol::UpdateBullets(const float dt) {
     for (auto &b: bullets_) {
         MoveBullet(b, dt);
         MarkBulletByLifetime(b);
     }
-    UpdateShooting(world, dt);
 }
 
 void Pistol::ApplyDamage(World &world) {
@@ -92,7 +90,8 @@ void Pistol::ApplyDamage(World &world) {
 }
 
 void Pistol::Update(World &world, const float dt) {
-    UpdateBullets(world, dt);
+    UpdateBullets(dt);
+    UpdateShooting(world, dt);
     ApplyDamage(world);
     std::erase_if(bullets_, [](const Bullet &b) { return b.dead; });
 }

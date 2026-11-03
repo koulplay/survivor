@@ -76,7 +76,7 @@ public:
     static constexpr float kMaxRange = 800.f;
     static constexpr float kBurstInterval = 0.2f;
 private:
-    void UpdateBullets(World &world, const float dt);
+    void UpdateBullets(const float dt);
     void ApplyDamage(World &world);
     void Fire(World &world);
     void UpdateShooting(World &world, const float dt);
