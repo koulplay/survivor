@@ -80,6 +80,7 @@ private:
     void ApplyDamage(World &world);
     void Fire(World &world);
     void UpdateShooting(World &world, const float dt);
+    [[nodiscard]] bool IsBursting() const;
 
     std::vector<Bullet> bullets_;
 

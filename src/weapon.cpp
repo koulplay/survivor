@@ -39,18 +39,23 @@ void Cooldown::Reset() {
     timer_ = 0.f;
 }
 
+bool Pistol::IsBursting() const {
+    return shots_left_ > 0;
+}
+
 void Pistol::Fire(World &world) {
+    --shots_left_;
     const std::optional<Vector2> target = NearestEnemyPos(world);
     if (!target) {
         fire_cooldown_.HoldReady(kPistolLevels[level_].fire_interval);
+
         return;
     }
     bullets_.push_back({world.player.pos, Vector2Normalize(*target - world.player.pos), kPistolLevels[level_].speed});
-    --shots_left_;
 }
 
 void Pistol::UpdateShooting(World &world, const float dt) {
-    if (shots_left_ == 0) {
+    if (!IsBursting()) {
         if (!fire_cooldown_.Tick(kPistolLevels[level_].fire_interval, dt)) return;
         shots_left_ = kPistolLevels[level_].bullet_count;
         burst_shot_cooldown_.Reset();
