@@ -44,13 +44,14 @@ bool Pistol::IsBursting() const {
 }
 
 void Pistol::Fire(World &world) {
-    --shots_left_;
     const std::optional<Vector2> target = NearestEnemyPos(world);
     if (!target) {
         fire_cooldown_.HoldReady(kPistolLevels[level_].fire_interval);
+        shots_left_ = 0;
         return;
     }
     bullets_.push_back({world.player.pos, Vector2Normalize(*target - world.player.pos), kPistolLevels[level_].speed});
+    --shots_left_;
 }
 
 void Pistol::UpdateShooting(World &world, const float dt) {
