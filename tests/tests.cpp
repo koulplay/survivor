@@ -39,8 +39,6 @@ void AddPlayer(Fnv1a &hash, const Player &player) {
     hash.F32(player.size);
     hash.F32(player.speed);
     hash.F32(player.magnet_radius);
-    hash.F32(player.bullet_speed_upgrade);
-    hash.F32(player.bullet_fire_interval_upgrade);
     hash.F32(player.invulnerability_timer);
     hash.U64(player.weapons.size());
 }

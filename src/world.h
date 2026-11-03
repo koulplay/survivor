@@ -88,9 +88,6 @@ struct Player {
     float speed = 150.f;
     float magnet_radius = 60.f;
 
-    float bullet_speed_upgrade = 0.f;
-    float bullet_fire_interval_upgrade = 0.f;
-
     float invulnerability_timer = 0.f;
 
     std::vector<std::unique_ptr<Weapon>> weapons = StartingWeapons();
