@@ -43,10 +43,14 @@ bool Pistol::IsBursting() const {
     return shots_left_ > 0;
 }
 
+bool Pistol::IsFirst() const {
+    return shots_left_ == kPistolLevels[level_].bullet_count;
+}
+
 void Pistol::Fire(World &world) {
     const std::optional<Vector2> target = NearestEnemyPos(world);
     if (!target) {
-        fire_cooldown_.HoldReady(kPistolLevels[level_].fire_interval);
+        if (IsFirst()) fire_cooldown_.HoldReady(kPistolLevels[level_].reload_time);
         shots_left_ = 0;
         return;
     }
@@ -56,7 +60,7 @@ void Pistol::Fire(World &world) {
 
 void Pistol::UpdateShooting(World &world, const float dt) {
     if (!IsBursting()) {
-        if (!fire_cooldown_.Tick(kPistolLevels[level_].fire_interval, dt)) return;
+        if (!fire_cooldown_.Tick(kPistolLevels[level_].reload_time, dt)) return;
         shots_left_ = kPistolLevels[level_].bullet_count;
         burst_shot_cooldown_.Reset();
         Fire(world);

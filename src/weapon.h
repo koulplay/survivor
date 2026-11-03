@@ -13,7 +13,7 @@ struct World;
 struct PistolLevel {
     float damage = 0.f;
     float speed = 0.f;
-    float fire_interval = 0.f;
+    float reload_time = 0.f;
     std::size_t bullet_count = 0;
 };
 
@@ -65,12 +65,12 @@ public:
     [[nodiscard]] const std::vector<Bullet>& GetBullets() const;
 
     static constexpr PistolLevel kPistolLevels[] = {
-        { .damage = 5.f,  .speed = 300.f, .fire_interval = 2.f,  .bullet_count = 1 },
-        { .damage = 7.f,  .speed = 300.f, .fire_interval = 1.8f, .bullet_count = 1 },
-        { .damage = 7.f,  .speed = 300.f, .fire_interval = 1.8f, .bullet_count = 2 },
-        { .damage = 10.f, .speed = 500.f, .fire_interval = 1.4f, .bullet_count = 2 },
-        { .damage = 10.f, .speed = 500.f, .fire_interval = 1.2f, .bullet_count = 3 },
-        { .damage = 15.f, .speed = 500.f, .fire_interval = 1.2f, .bullet_count = 4 }
+        { .damage = 5.f,  .speed = 300.f, .reload_time = 2.f,  .bullet_count = 1 },
+        { .damage = 7.f,  .speed = 300.f, .reload_time = 1.8f, .bullet_count = 1 },
+        { .damage = 7.f,  .speed = 300.f, .reload_time = 1.8f, .bullet_count = 2 },
+        { .damage = 10.f, .speed = 500.f, .reload_time = 1.4f, .bullet_count = 2 },
+        { .damage = 10.f, .speed = 500.f, .reload_time = 1.2f, .bullet_count = 3 },
+        { .damage = 15.f, .speed = 500.f, .reload_time = 1.2f, .bullet_count = 4 }
     };
 
     static constexpr float kMaxRange = 800.f;
@@ -81,6 +81,7 @@ private:
     void Fire(World &world);
     void UpdateShooting(World &world, const float dt);
     [[nodiscard]] bool IsBursting() const;
+    [[nodiscard]] bool IsFirst() const;
 
     std::vector<Bullet> bullets_;
 
