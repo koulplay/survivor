@@ -10,7 +10,7 @@
 
 namespace {
 [[nodiscard]] bool ShouldDieByLifetime(const Bullet &b) {
-    return b.age >= Pistol::kmaxRange / b.speed;
+    return b.age >= Pistol::kMaxRange / b.speed;
 }
 
 void MarkBulletByLifetime(Bullet &b) {

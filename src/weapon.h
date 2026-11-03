@@ -73,7 +73,7 @@ public:
         { .damage = 15.f, .speed = 500.f, .fire_interval = 1.2f, .bullet_count = 4 }
     };
 
-    static constexpr float kmaxRange = 800.f;
+    static constexpr float kMaxRange = 800.f;
     static constexpr float kBurstInterval = 0.2f;
 private:
     void UpdateBullets(World &world, const float dt);
