@@ -1,15 +1,17 @@
 #include "update.h"
+
 #include "weapon.h"
 #include "world.h"
 
 #include <raylib.h>
 #include <raymath.h>
-#include <algorithm>
-#include <array>
+
 #include <cassert>
+#include <array>
+#include <string>
+#include <algorithm>
 #include <optional>
 #include <random>
-#include <string>
 
 
 namespace {
@@ -163,6 +165,8 @@ void UpdateDamagePopups(World &world, const float dt) {
 
 void FillLevelUpMenu(World &world) {
     std::array<Upgrade, static_cast<int>(Upgrade::Count)> all{};
+
+
     for (int i = 0; i < static_cast<int>(all.size()); ++i) all[i] = static_cast<Upgrade>(i);
     std::shuffle(all.begin(), all.end(), world.rng);
     for (int i = 0; i < 3; ++i) world.level_up_menu.options[i] = all[i];
@@ -191,7 +195,7 @@ void CreateDamagePopupMessage(World &world, const Vector2 pos, const Vector2 vel
     });
 }
 
-void EnemyDead(World &world, const Enemy& e) {
+void OnEnemyDeath(World &world, const Enemy& e) {
         const EnemyDef &e_def = GetEnemyDef(e.type);
         if (e_def.exp) {
             world.exps.push_back({e.pos, e_def.exp});
@@ -199,6 +203,15 @@ void EnemyDead(World &world, const Enemy& e) {
         if (e.type == EnemyType::Splitter) {
             OnSplitterDeath(world, e);
         }
+}
+
+void ApplyLevelUp(Player &player, const WeaponId id) {
+    for (auto &w : player.weapons) {
+        if (w->GetId() == id) {
+            w->LevelUp();
+            return;
+        }
+    }
 }
 }
 
@@ -210,7 +223,7 @@ void DamageEnemy(World &world, Enemy &e, const float damage) {
     e.health -= damage;
     if (e.health <= 0) {
         e.dead = true;
-        EnemyDead(world, e);
+        OnEnemyDeath(world, e);
     }
 }
 
@@ -219,8 +232,8 @@ void DamageEnemy(World &world, Enemy &e, const float damage) {
         return std::nullopt;
     }
 
-    float best_distance = Vector2Distance(world.player.pos, world.enemies[0].pos);
     Vector2 nearest_pos = world.enemies[0].pos;
+    float best_distance = Vector2Distance(world.player.pos, world.enemies[0].pos);
     for (auto &e: world.enemies) {
         const float new_distance = Vector2Distance(world.player.pos, e.pos);
         if (new_distance < best_distance) {
@@ -268,25 +281,18 @@ void Update(World &world, const Input& input) {
     std::erase_if(world.damage_popups, [](const DamagePopup &dp) { return dp.dead; });
 }
 
- void ApplyUpgrade(Player &p, Upgrade u) {
-     // только изменение
-     switch (u) {
-         case Upgrade::FireInterval: p.bullet_fire_interval_upgrade += kUpgradeFireInterval;
-             break;
-         case Upgrade::MoveSpeed: p.speed += kUpgradeMoveSpeed;
-             break;
-         case Upgrade::BulletSpeed: p.bullet_speed_upgrade += kUpgradeBulletSpeed;
-             break;
-         case Upgrade::Magnet: p.magnet_radius += kUpgradeMagnet;
-             break;
-         case Upgrade::MaxHealth: p.max_health += kUpgradeMaxHealth;
-             p.health += kUpgradeMaxHealth;
-             break;
-         case Upgrade::RestoreHealth: p.health = std::min(p.health + kUpgradeRestoreHealth, p.max_health);
-             break;
-         case Upgrade::Count: break;
-     }
- }
+void ApplyUpgrade(Player &p, Upgrade u) {
+    // только изменение
+    switch (u) {
+        case Upgrade::Pistol: ApplyLevelUp(p, WeaponId::Pistol);
+            break;
+        case Upgrade::Aura: ApplyLevelUp(p, WeaponId::Aura);
+            break;
+        case Upgrade::Blades: ApplyLevelUp(p, WeaponId::Blades);
+            break;
+        case Upgrade::Count: break;
+    }
+}
 
 bool UpdateLevelUp(World &world, const Input &input) {
     auto &m = world.level_up_menu;

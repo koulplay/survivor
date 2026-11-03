@@ -1,37 +1,57 @@
 #pragma once
 
 #include <raylib.h>
+
 #include <vector>
 #include <memory>
 
 
-constexpr float kBulletMaxLifetime = 10.f;
-constexpr float kBulletMinFireInterval = 0.1f;
-
-constexpr float kUpgradeFireInterval = 0.2f;
-constexpr float kUpgradeBulletSpeed = 25.f;
+enum class WeaponId { Pistol, Aura, Blades };
 
 struct World;
 
+struct PistolLevel {
+    float damage = 0.f;
+    float speed = 0.f;
+    float reload_time = 0.f;
+    std::size_t bullet_count = 0;
+};
+
+struct AuraLevel {
+    float damage = 0.f;
+    float radius = 0.f;
+};
+
+struct BladesLevel {
+    float damage = 0.f;
+    std::size_t count = 0;
+};
+
 class Cooldown {
 public:
-    [[nodiscard]] bool Tick(const float interval, const float dt); // Возвращает false если выполняет условие (timer < interval). Если условие не выполняется - интервал списывается, сдача остаётся
+    // Возвращает false если выполняет условие (timer < interval). Если условие не выполняется - интервал списывается, сдача остаётся
+    [[nodiscard]] bool Tick(const float interval, const float dt);
     void HoldReady(const float interval);
+    void Reset();
 
 private:
-    float timer = 0.f;
+    float timer_ = 0.f;
 };
 
 class Weapon {
 public:
     virtual void Update(World &world, const float dt) = 0;
     virtual void Draw(const World &world) const = 0;
+    virtual void LevelUp() = 0;
+    virtual WeaponId GetId() const = 0;
+
     virtual ~Weapon() = default;
 };
 
 struct Bullet {
     Vector2 pos;
-    Vector2 vel;
+    Vector2 dir;
+    float speed = 0.f;
     float age = 0.f;
     bool dead = false;
 };
@@ -40,63 +60,97 @@ class Pistol : public Weapon {
 public:
     void Update(World &world, const float dt) override;
     void Draw(const World &world) const override;
-
+    void LevelUp() override;
+    [[nodiscard]] WeaponId GetId() const override;
     [[nodiscard]] const std::vector<Bullet>& GetBullets() const;
 
-    static constexpr float kFireInterval = 2.f;
+    static constexpr PistolLevel kPistolLevels[] = {
+        { .damage = 5.f,  .speed = 300.f, .reload_time = 2.f,  .bullet_count = 1 },
+        { .damage = 7.f,  .speed = 300.f, .reload_time = 1.8f, .bullet_count = 1 },
+        { .damage = 7.f,  .speed = 300.f, .reload_time = 1.8f, .bullet_count = 2 },
+        { .damage = 10.f, .speed = 500.f, .reload_time = 1.4f, .bullet_count = 2 },
+        { .damage = 10.f, .speed = 500.f, .reload_time = 1.2f, .bullet_count = 3 },
+        { .damage = 15.f, .speed = 500.f, .reload_time = 1.2f, .bullet_count = 4 }
+    };
 
+    static constexpr float kMaxRange = 800.f;
+    static constexpr float kBurstInterval = 0.2f;
 private:
-    void UpdateBullets(World &world, const float dt);
+    void UpdateBullets(const float dt);
     void ApplyDamage(World &world);
+    void Fire(World &world);
+    void UpdateShooting(World &world, const float dt);
+    [[nodiscard]] bool IsBursting() const;
+    [[nodiscard]] bool IsFirst() const;
 
-    std::vector<Bullet> bullets;
+    std::vector<Bullet> bullets_;
 
-    float damage = 5.f;
-    float speed = 300.f;
-    float radius = 3.f;
-    Cooldown cooldown;
+    std::size_t level_ = 0;
+    float radius_ = 3.f;
+    Cooldown fire_cooldown_;
+    Cooldown burst_shot_cooldown_;
+    std::size_t shots_left_ = 0;
 };
 
 class Aura : public Weapon {
 public:
     void Update(World &world, const float dt) override;
     void Draw(const World &world) const override;
+    void LevelUp() override;
+    [[nodiscard]] WeaponId GetId() const override;
 
     static constexpr float kFireInterval = 0.7f;
+    static constexpr AuraLevel kAuraLevels[] = {
+        { .damage = 2.f,  .radius = 100.f, },
+        { .damage = 3.f,  .radius = 100.f, },
+        { .damage = 5.f,  .radius = 100.f, },
+        { .damage = 5.f,  .radius = 125.f, },
+        { .damage = 6.f,  .radius = 150.f, },
+        { .damage = 10.f, .radius = 150.f, }
+    };
 
 private:
     void ApplyDamage(World &world);
 
-    float damage = 2.f;
-    float radius = 100.f;
-    Cooldown cooldown;
+    std::size_t level_ = 0;
+    Cooldown cooldown_;
 };
 
 class Blades : public Weapon {
 public:
     void Update(World &world, const float dt) override;
     void Draw(const World &world) const override;
+    void LevelUp() override;
+    [[nodiscard]] WeaponId GetId() const override;
     [[nodiscard]] bool IsActive() const;
 
     static constexpr float kFireInterval = 0.1f;
     static constexpr float kSpawnInterval = 2.f;
     static constexpr float kLiveInterval = 4.f;
     static constexpr float kCircleRadius = 130.f;
+    static constexpr BladesLevel kBladesLevels[] = {
+        { .damage = 2.f,  .count = 1, },
+        { .damage = 3.f,  .count = 2, },
+        { .damage = 5.f,  .count = 3, },
+        { .damage = 5.f,  .count = 4, },
+        { .damage = 6.f,  .count = 5, },
+        { .damage = 10.f, .count = 6, }
+    };
 
 private:
     void UpdateBlades(World &world, const float dt);
     [[nodiscard]] bool TrySpawnBlades(const float dt);
     void ApplyDamage(World &world);
 
-    std::vector<Vector2> blades_pos;
-    float angle = 0.f;
-    float damage = 2.f;
-    float blade_radius = 7.f;
-    std::size_t count = 1;
-    static constexpr float rotate_speed = 75.f;
-    Cooldown cooldown_spawn;
-    Cooldown cooldown_hit;
-    bool active = false;
+    std::vector<Vector2> blades_pos_;
+
+    float angle_ = 0.f;
+    float blade_radius_ = 7.f;
+    static constexpr float rotate_speed_ = 75.f;
+    std::size_t level_ = 0;
+    Cooldown cooldown_spawn_;
+    Cooldown cooldown_hit_;
+    bool active_ = false;
 };
 
 [[nodiscard]] std::vector<std::unique_ptr<Weapon>> StartingWeapons();

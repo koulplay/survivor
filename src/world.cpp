@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+
 [[nodiscard]] Rectangle CardRect(int i) {
     constexpr float total = 3 * kCardWidth + 2 * kCardGap;
     return {

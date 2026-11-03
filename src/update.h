@@ -2,6 +2,7 @@
 
 #include "world.h"
 
+
 [[nodiscard]] std::optional<Vector2> NearestEnemyPos(const World &world);
 void DamageEnemy(World &world, Enemy &e, const float damage);
 void OnSplitterDeath(World &world, const Enemy& splitter);

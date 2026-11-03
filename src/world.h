@@ -3,11 +3,13 @@
 #include "weapon.h"
 
 #include <raylib.h>
+
 #include <vector>
 #include <array>
 #include <optional>
 #include <random>
 #include <memory>
+
 
 constexpr int kScreenWidth = 1280;
 constexpr int kScreenHeight = 720;
@@ -27,11 +29,6 @@ constexpr float kCardWidth = 300.f;
 constexpr float kCardHeight = 500.f;
 constexpr float kCardGap = 50.f;
 
-constexpr float kUpgradeMoveSpeed = 10.f;
-constexpr float kUpgradeMagnet = 5.f;
-constexpr float kUpgradeMaxHealth = 5.f;
-constexpr float kUpgradeRestoreHealth = 25.f;
-
 constexpr float kDamagePopupSpeed = 10.f;
 constexpr float kEnemyFlashDuration = 0.05f;
 
@@ -46,7 +43,7 @@ constexpr float kSeparationSpeedFactor = 5.f;
 
 enum class GameState { Playing, LevelUp, GameOver };
 
-enum class Upgrade { FireInterval, MoveSpeed, BulletSpeed, Magnet, MaxHealth, RestoreHealth, Count };
+enum class Upgrade { Pistol, Aura, Blades, Count };
 
 enum class EnemyType { Light, Medium, Heavy, Splitter, Twin, Count };
 
@@ -90,9 +87,6 @@ struct Player {
     float size = 32.f;
     float speed = 150.f;
     float magnet_radius = 60.f;
-
-    float bullet_speed_upgrade = 0.f;
-    float bullet_fire_interval_upgrade = 0.f;
 
     float invulnerability_timer = 0.f;
 
