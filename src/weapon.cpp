@@ -93,7 +93,7 @@ void Pistol::Update(World &world, const float dt) {
 }
 
 void Pistol::LevelUp() {
-    if (sizeof(kPistolLevels) / sizeof(PistolLevel) - 1 == level_) return;
+    if (std::size(kPistolLevels) - 1 == level_) return;
     ++level_;
 }
 
@@ -115,7 +115,7 @@ void Aura::Update(World &world, const float dt) {
 }
 
 void Aura::LevelUp() {
-    if (sizeof(kAuraLevels) / sizeof(AuraLevel) - 1 == level_) return;
+    if (std::size(kAuraLevels) - 1 == level_) return;
     ++level_;
 }
 
@@ -162,7 +162,7 @@ void Blades::Update(World &world, const float dt) {
 }
 
 void Blades::LevelUp() {
-    if (sizeof(kBladesLevels) / sizeof(BladesLevel) - 1 == level_) return;
+    if (std::size(kBladesLevels) - 1 == level_) return;
     ++level_;
 }
 
